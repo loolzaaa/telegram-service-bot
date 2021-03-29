@@ -1,0 +1,43 @@
+package ru.loolzaaa.telegram.loolzbot.bot.commands.currencies;
+
+
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Chat;
+import org.telegram.telegrambots.meta.api.objects.User;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.bots.AbsSender;
+import ru.loolzaaa.telegram.loolzbot.bot.commands.CommonCommand;
+
+import java.util.List;
+
+public class RatesInlineMenuCommand extends CommonCommand {
+
+    public RatesInlineMenuCommand(String commandIdentifier, String description) {
+        super(commandIdentifier, description);
+    }
+
+    @Override
+    public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
+        InlineKeyboardButton.InlineKeyboardButtonBuilder keyboardButtonBuilder = InlineKeyboardButton.builder();
+        InlineKeyboardButton USDRUBButton = keyboardButtonBuilder
+                .text("USD/RUB")
+                .callbackData("/rate usd rub")
+                .build();
+        InlineKeyboardButton ETHUSDButton = keyboardButtonBuilder
+                .text("ETH/USD")
+                .callbackData("/rate eth usd")
+                .build();
+
+        InlineKeyboardMarkup.InlineKeyboardMarkupBuilder keyboardMarkupBuilder = InlineKeyboardMarkup.builder();
+        ReplyKeyboard replyKeyboard = keyboardMarkupBuilder.keyboardRow(List.of(USDRUBButton, ETHUSDButton)).build();
+
+        SendMessage message = new SendMessage();
+        message.setChatId(chat.getId().toString());
+        message.setReplyMarkup(replyKeyboard);
+        message.setText("Выберите один из вариантов:");
+
+        sendAnswer(absSender, message);
+    }
+}
