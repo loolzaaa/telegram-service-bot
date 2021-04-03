@@ -4,7 +4,10 @@ import org.telegram.telegrambots.extensions.bots.commandbot.TelegramWebhookComma
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.*;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.MessageEntity;
+import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.loolzaaa.telegram.loolzbot.bot.commands.ClearConfigCommand;
 import ru.loolzaaa.telegram.loolzbot.bot.commands.StartCommand;
