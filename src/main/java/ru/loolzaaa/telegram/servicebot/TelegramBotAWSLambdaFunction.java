@@ -35,9 +35,10 @@ public class TelegramBotAWSLambdaFunction implements RequestHandler<APIGatewayV2
 
 	@Override
 	public APIGatewayV2HTTPResponse handleRequest(APIGatewayV2HTTPEvent apiGatewayV2HTTPEvent, Context context) {
+		Configuration configuration = loadConfigurationFromS3();
+
 		this.bot = new TelegramServiceBot();
-		loadConfigurationFromS3();
-		this.bot.init();
+		this.bot.init(configuration);
 
 		Map<String, String> headers = new HashMap<>();
 		headers.put("Content-Type", "application/json;charset=UTF-8");
@@ -73,14 +74,13 @@ public class TelegramBotAWSLambdaFunction implements RequestHandler<APIGatewayV2
 				.build();
 	}
 
-	private void loadConfigurationFromS3() {
+	private Configuration loadConfigurationFromS3() {
 		GetObjectRequest request = GetObjectRequest.builder()
 				.bucket(System.getenv("s3_config_bucket"))
 				.key(System.getenv("s3_config_key"))
 				.build();
 		try {
-			Configuration configuration = MAPPER.readValue(S3.getObject(request), Configuration.class);
-			this.bot.setConfiguration(configuration);
+			return MAPPER.readValue(S3.getObject(request), Configuration.class);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

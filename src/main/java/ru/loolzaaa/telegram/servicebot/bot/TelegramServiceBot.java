@@ -26,7 +26,8 @@ public class TelegramServiceBot extends TelegramWebhookCommandBot {
 
     private Configuration configuration;
 
-    public void init() {
+    public void init(Configuration configuration) {
+        this.configuration = configuration;
         register(new StartCommand("start", "Старт", configuration));
         register(new RatesInlineMenuCommand("rates", "Меню курсов валют", configuration));
         register(new CurrencyRatesCommand("rate", "Курс валют", configuration));
@@ -161,10 +162,6 @@ public class TelegramServiceBot extends TelegramWebhookCommandBot {
     @Override
     public String getBotPath() {
         return null;
-    }
-
-    public void setConfiguration(Configuration configuration) {
-        this.configuration = configuration;
     }
 
     public Configuration getConfiguration() {
