@@ -20,6 +20,7 @@ import ru.loolzaaa.telegram.servicebot.bot.pojo.User;
 import ru.loolzaaa.telegram.servicebot.service.RussianPostTrackingService;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 
 public class TelegramServiceBot extends TelegramWebhookCommandBot {
@@ -107,8 +108,13 @@ public class TelegramServiceBot extends TelegramWebhookCommandBot {
                 message.setText(answer);
             } catch (Exception e) {
                 e.printStackTrace();
-                message.setText("Ошибка");
+                message.setText("Ошибка. Попробуйте позже.");
             }
+
+            new Thread(() -> {
+                trackHistory.sort(Comparator.comparing(TrackEntry::getLastActivity));
+                while (trackHistory.size() > 10) trackHistory.remove(0);
+            }).start();
         } else {
             message.setText("Некорректный трек номер");
         }

@@ -99,14 +99,15 @@ public class RussianPostTrackingService {
     }
 
     private static String getAnswerString(JsonNode trackNode) {
-        StringJoiner stringJoiner = new StringJoiner("\r\n");
+        StringJoiner stringJoiner = new StringJoiner("\n");
         Iterator<JsonNode> trackNodeIterator = trackNode.elements();
         while (trackNodeIterator.hasNext()) {
             JsonNode historyNode = trackNodeIterator.next();
             LocalDateTime date = LocalDateTime.parse(historyNode.get("date").asText(), INPUT_FORMAT);
+            String cityName = historyNode.get("cityName").asText();
             String humanStatus = historyNode.get("humanStatus").asText();
             stringJoiner
-                    .add(date.format(OUTPUT_FORMAT))
+                    .add(date.format(OUTPUT_FORMAT) + (cityName == null ? "" : " " + cityName))
                     .add(humanStatus)
                     .add("");
         }
