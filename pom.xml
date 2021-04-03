@@ -4,9 +4,9 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>ru.loolzaaa.telegram</groupId>
-  <artifactId>loolz-bot-lambda</artifactId>
+  <artifactId>telegram-service-bot-lambda</artifactId>
   <version>1.0.0</version>
-  <name>loolz-bot</name>
+  <name>telegram-service-bot</name>
   <description>Telegram Bot for AWS Lambda</description>
 
   <properties>

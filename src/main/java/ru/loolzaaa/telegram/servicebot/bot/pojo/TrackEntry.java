@@ -1,4 +1,4 @@
-package ru.loolzaaa.telegram.loolzbot.bot.pojo;
+package ru.loolzaaa.telegram.servicebot.bot.pojo;
 
 import java.time.LocalDateTime;
 import java.util.Objects;

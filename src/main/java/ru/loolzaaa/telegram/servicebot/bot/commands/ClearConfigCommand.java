@@ -1,10 +1,10 @@
-package ru.loolzaaa.telegram.loolzbot.bot.commands;
+package ru.loolzaaa.telegram.servicebot.bot.commands;
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.bots.AbsSender;
-import ru.loolzaaa.telegram.loolzbot.bot.pojo.Configuration;
+import ru.loolzaaa.telegram.servicebot.bot.pojo.Configuration;
 
 import java.util.ArrayList;
 

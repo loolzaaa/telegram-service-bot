@@ -1,4 +1,4 @@
-package ru.loolzaaa.telegram.loolzbot.bot;
+package ru.loolzaaa.telegram.servicebot.bot;
 
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramWebhookCommandBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
@@ -9,20 +9,20 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.MessageEntity;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import ru.loolzaaa.telegram.loolzbot.bot.commands.ClearConfigCommand;
-import ru.loolzaaa.telegram.loolzbot.bot.commands.StartCommand;
-import ru.loolzaaa.telegram.loolzbot.bot.commands.TrackHistoryCommand;
-import ru.loolzaaa.telegram.loolzbot.bot.commands.currencies.CurrencyRatesCommand;
-import ru.loolzaaa.telegram.loolzbot.bot.commands.currencies.RatesInlineMenuCommand;
-import ru.loolzaaa.telegram.loolzbot.bot.pojo.Configuration;
-import ru.loolzaaa.telegram.loolzbot.bot.pojo.TrackEntry;
-import ru.loolzaaa.telegram.loolzbot.bot.pojo.User;
-import ru.loolzaaa.telegram.loolzbot.service.RussianPostTrackingService;
+import ru.loolzaaa.telegram.servicebot.bot.commands.ClearConfigCommand;
+import ru.loolzaaa.telegram.servicebot.bot.commands.StartCommand;
+import ru.loolzaaa.telegram.servicebot.bot.commands.TrackHistoryCommand;
+import ru.loolzaaa.telegram.servicebot.bot.commands.currencies.CurrencyRatesCommand;
+import ru.loolzaaa.telegram.servicebot.bot.commands.currencies.RatesInlineMenuCommand;
+import ru.loolzaaa.telegram.servicebot.bot.pojo.Configuration;
+import ru.loolzaaa.telegram.servicebot.bot.pojo.TrackEntry;
+import ru.loolzaaa.telegram.servicebot.bot.pojo.User;
+import ru.loolzaaa.telegram.servicebot.service.RussianPostTrackingService;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class LoolzBot extends TelegramWebhookCommandBot {
+public class TelegramServiceBot extends TelegramWebhookCommandBot {
 
     private Configuration configuration;
 

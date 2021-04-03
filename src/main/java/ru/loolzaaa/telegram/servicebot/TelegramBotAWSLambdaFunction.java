@@ -1,4 +1,4 @@
-package ru.loolzaaa.telegram.loolzbot;
+package ru.loolzaaa.telegram.servicebot;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -9,8 +9,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiValidationException;
-import ru.loolzaaa.telegram.loolzbot.bot.LoolzBot;
-import ru.loolzaaa.telegram.loolzbot.bot.pojo.Configuration;
+import ru.loolzaaa.telegram.servicebot.bot.TelegramServiceBot;
+import ru.loolzaaa.telegram.servicebot.bot.pojo.Configuration;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -21,13 +21,13 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class LoolzBotAWSLambdaFunction implements RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HTTPResponse> {
+public class TelegramBotAWSLambdaFunction implements RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HTTPResponse> {
 
 	private static final S3Client S3 = S3Client.builder().region(Region.US_EAST_2).build();
 
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 
-	private LoolzBot bot;
+	private TelegramServiceBot bot;
 
 	static {
 		MAPPER.registerModule(new JavaTimeModule());
@@ -35,7 +35,7 @@ public class LoolzBotAWSLambdaFunction implements RequestHandler<APIGatewayV2HTT
 
 	@Override
 	public APIGatewayV2HTTPResponse handleRequest(APIGatewayV2HTTPEvent apiGatewayV2HTTPEvent, Context context) {
-		this.bot = new LoolzBot();
+		this.bot = new TelegramServiceBot();
 		loadConfigurationFromS3();
 		this.bot.init();
 
