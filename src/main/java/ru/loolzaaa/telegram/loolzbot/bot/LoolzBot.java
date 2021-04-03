@@ -1,26 +1,47 @@
 package ru.loolzaaa.telegram.loolzbot.bot;
 
-import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
+import org.telegram.telegrambots.extensions.bots.commandbot.TelegramWebhookCommandBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
+import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
-import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.MessageEntity;
-import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import ru.loolzaaa.telegram.loolzbot.bot.commands.ClearConfigCommand;
 import ru.loolzaaa.telegram.loolzbot.bot.commands.StartCommand;
+import ru.loolzaaa.telegram.loolzbot.bot.commands.TrackHistoryCommand;
 import ru.loolzaaa.telegram.loolzbot.bot.commands.currencies.CurrencyRatesCommand;
 import ru.loolzaaa.telegram.loolzbot.bot.commands.currencies.RatesInlineMenuCommand;
+import ru.loolzaaa.telegram.loolzbot.bot.pojo.Configuration;
+import ru.loolzaaa.telegram.loolzbot.bot.pojo.TrackEntry;
+import ru.loolzaaa.telegram.loolzbot.bot.pojo.User;
 import ru.loolzaaa.telegram.loolzbot.service.RussianPostTrackingService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
-public class LoolzBot extends TelegramLongPollingCommandBot {
+public class LoolzBot extends TelegramWebhookCommandBot {
 
-    public LoolzBot() {
-        register(new StartCommand("start", "Старт"));
-        register(new RatesInlineMenuCommand("rates", "Меню курсов валют"));
-        register(new CurrencyRatesCommand("rate", "Курс валют"));
+    private Configuration configuration;
+
+    public void init() {
+        register(new StartCommand("start", "Старт", configuration));
+        register(new RatesInlineMenuCommand("rates", "Меню курсов валют", configuration));
+        register(new CurrencyRatesCommand("rate", "Курс валют", configuration));
+        register(new TrackHistoryCommand("trackhistory", "История отслеживаний", configuration));
+        register(new ClearConfigCommand("clearconfig", "", configuration));
+    }
+
+    @Override
+    public BotApiMethod<?> onWebhookUpdateReceived(Update update) {
+        if (update.hasMessage()) {
+            Message message = update.getMessage();
+            org.telegram.telegrambots.meta.api.objects.User user = message.getFrom();
+            if (configuration.getUserById(user.getId()) == null) {
+                configuration.getUsers().add(new User(user.getId()));
+            }
+            configuration.getUserById(user.getId()).setLastActivity(LocalDateTime.now());
+        }
+        return super.onWebhookUpdateReceived(update);
     }
 
     @Override
@@ -30,30 +51,65 @@ public class LoolzBot extends TelegramLongPollingCommandBot {
             return;
         }
 
-        String msgText = update.getMessage().getText().toUpperCase();
+        String msgText = update.getMessage().getText();
 
-        SendMessage message = new SendMessage(); // Create a SendMessage object with mandatory fields
-        message.setChatId(update.getMessage().getChatId().toString());
-        message.setText(String.format("Accepted: %s. Tracking...", msgText));
+        String probablyTrackNumber = msgText.split("\\s")[0];
+        if (RussianPostTrackingService.validateTrackNumber(probablyTrackNumber)) {
+            Long userId = update.getMessage().getFrom().getId();
+            List<TrackEntry> trackHistory = configuration.getUserById(userId).getTrackHistory();
 
-        try {
-            execute(message); // Call method to send the message
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
+            String trackNumber = probablyTrackNumber.toUpperCase();
+            String description = null;
+            try {
+                int firstSpaceIndex = msgText.indexOf(" ");
+                if (firstSpaceIndex != -1) {
+                    description = msgText.substring(msgText.indexOf(" ") + 1).trim();
+                    if (description.length() > 128) description = description.substring(0, 128);
+                    if ("".equals(description)) description = null;
+                }
+            } catch (Exception ignored) {}
 
-        try {
-            String answer = RussianPostTrackingService.track(msgText);
-            message.setText(answer);
-        } catch (Exception e) {
-            e.printStackTrace();
-            message.setText("Ошибка");
-        }
+            TrackEntry entry = new TrackEntry();
+            entry.setNumber(trackNumber);
+            entry.setLastActivity(LocalDateTime.now());
+            entry.setDescription(description);
 
-        try {
-            execute(message); // Call method to send the message
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
+            SendMessage message = new SendMessage();
+            message.setChatId(update.getMessage().getChatId().toString());
+            if (!trackHistory.contains(entry)) {
+                trackHistory.add(entry);
+            } else {
+                for (TrackEntry e : trackHistory) {
+                    if (e.equals(entry)) {
+                        if (description != null) e.setDescription(description);
+                        description = e.getDescription();
+                        e.setLastActivity(LocalDateTime.now());
+                    }
+                }
+            }
+            if (description == null) {
+                description = "Описание не задано. Можно задать при запросе, отделив пробелом";
+            }
+            message.setText(String.format("Номер отслеживания: %s\n%s\nПодождите...", trackNumber, description));
+            try {
+                execute(message);
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                String answer = RussianPostTrackingService.track(trackNumber);
+                message.setText(answer);
+            } catch (Exception e) {
+                e.printStackTrace();
+                message.setText("Ошибка");
+            }
+
+            try {
+                execute(message);
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -71,14 +127,14 @@ public class LoolzBot extends TelegramLongPollingCommandBot {
         update.setCallbackQuery(null);
         try {
             execute(new AnswerCallbackQuery(callbackQuery.getId()));
-            onUpdateReceived(update);
+            onWebhookUpdateReceived(update);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
     }
 
     @Override
-    protected void processInvalidCommandUpdate(Update update) {
+    public void processInvalidCommandUpdate(Update update) {
         SendMessage message = new SendMessage();
         message.setChatId(update.getMessage().getChatId().toString());
         message.setText("Неизвестная команда");
@@ -91,11 +147,24 @@ public class LoolzBot extends TelegramLongPollingCommandBot {
 
     @Override
     public String getBotToken() {
-        return System.getenv("bot.token");
+        return System.getenv("bot_token");
     }
 
     @Override
     public String getBotUsername() {
-        return System.getenv("bot.name");
+        return System.getenv("bot_name");
+    }
+
+    @Override
+    public String getBotPath() {
+        return null;
+    }
+
+    public void setConfiguration(Configuration configuration) {
+        this.configuration = configuration;
+    }
+
+    public Configuration getConfiguration() {
+        return configuration;
     }
 }

@@ -6,21 +6,25 @@ import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.bots.AbsSender;
+import ru.loolzaaa.telegram.loolzbot.bot.pojo.Configuration;
 
 public class StartCommand extends CommonCommand {
 
-    public StartCommand(String commandIdentifier, String description) {
-        super(commandIdentifier, description);
+    public StartCommand(String commandIdentifier, String description, Configuration configuration) {
+        super(commandIdentifier, description, configuration);
     }
 
     @Override
     public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
-        KeyboardRow keyboardRow = new KeyboardRow();
-        keyboardRow.add("/rates - Курс вылют");
+        KeyboardRow ratesRow = new KeyboardRow();
+        ratesRow.add("/rates - Курс валют");
+        KeyboardRow trackHistoryRow = new KeyboardRow();
+        trackHistoryRow.add("/trackhistory - История отслеживаний");
 
         ReplyKeyboardMarkup.ReplyKeyboardMarkupBuilder replyKeyboardMarkupBuilder = ReplyKeyboardMarkup.builder();
         ReplyKeyboardMarkup replyKeyboardMarkup = replyKeyboardMarkupBuilder
-                .keyboardRow(keyboardRow)
+                .keyboardRow(ratesRow)
+                .keyboardRow(trackHistoryRow)
                 .resizeKeyboard(true)
                 .oneTimeKeyboard(true)
                 .build();
