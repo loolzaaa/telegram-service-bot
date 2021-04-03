@@ -55,6 +55,9 @@ public class TelegramServiceBot extends TelegramWebhookCommandBot {
             return;
         }
 
+        SendMessage message = new SendMessage();
+        message.setChatId(update.getMessage().getChatId().toString());
+
         String msgText = update.getMessage().getText();
 
         String probablyTrackNumber = msgText.split("\\s")[0];
@@ -78,8 +81,6 @@ public class TelegramServiceBot extends TelegramWebhookCommandBot {
             entry.setLastActivity(LocalDateTime.now());
             entry.setDescription(description);
 
-            SendMessage message = new SendMessage();
-            message.setChatId(update.getMessage().getChatId().toString());
             if (!trackHistory.contains(entry)) {
                 trackHistory.add(entry);
             } else {
@@ -108,12 +109,14 @@ public class TelegramServiceBot extends TelegramWebhookCommandBot {
                 e.printStackTrace();
                 message.setText("Ошибка");
             }
+        } else {
+            message.setText("Некорректный трек номер");
+        }
 
-            try {
-                execute(message);
-            } catch (TelegramApiException e) {
-                e.printStackTrace();
-            }
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
         }
     }
 

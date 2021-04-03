@@ -32,7 +32,7 @@ public class StartCommand extends CommonCommand {
         SendMessage message = new SendMessage();
         message.setChatId(chat.getId().toString());
         message.setReplyMarkup(replyKeyboardMarkup);
-        message.setText("Введите трэк номер отправления или выберите функционал из меню");
+        message.setText("Введите трек номер отправления или выберите функционал из меню");
 
         sendAnswer(absSender, message);
     }
