@@ -78,7 +78,7 @@ public class LoolzBot extends TelegramLongPollingCommandBot {
     }
 
     @Override
-    protected void processInvalidCommandUpdate(Update update) {
+    public void processInvalidCommandUpdate(Update update) {
         SendMessage message = new SendMessage();
         message.setChatId(update.getMessage().getChatId().toString());
         message.setText("Неизвестная команда");
