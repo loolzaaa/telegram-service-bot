@@ -1,4 +1,4 @@
-package ru.loolzaaa.telegram.loolzbot.service;
+package ru.loolzaaa.telegram.servicebot.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,9 +16,12 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
 import java.util.StringJoiner;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
 public class RussianPostTrackingService {
+
+    private static final Pattern TRACK_NUMBER_FORMAT = Pattern.compile("^[A-Za-z]{2}\\d{9}[A-Za-z]{2}$|^\\d{14}$");
 
     private static final DateTimeFormatter INPUT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
     private static final DateTimeFormatter OUTPUT_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
@@ -39,6 +42,10 @@ public class RussianPostTrackingService {
             "p_p_cacheability=cacheLevelPage&" +
             "p_p_col_id=column-1&" +
             "p_p_col_count=1";
+
+    public static boolean validateTrackNumber(String number) {
+        return TRACK_NUMBER_FORMAT.matcher(number).matches();
+    }
 
     public static String track(String trackNumber) throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
@@ -92,14 +99,15 @@ public class RussianPostTrackingService {
     }
 
     private static String getAnswerString(JsonNode trackNode) {
-        StringJoiner stringJoiner = new StringJoiner("\r\n");
+        StringJoiner stringJoiner = new StringJoiner("\n");
         Iterator<JsonNode> trackNodeIterator = trackNode.elements();
         while (trackNodeIterator.hasNext()) {
             JsonNode historyNode = trackNodeIterator.next();
             LocalDateTime date = LocalDateTime.parse(historyNode.get("date").asText(), INPUT_FORMAT);
+            String cityName = historyNode.get("cityName").asText();
             String humanStatus = historyNode.get("humanStatus").asText();
             stringJoiner
-                    .add(date.format(OUTPUT_FORMAT))
+                    .add(date.format(OUTPUT_FORMAT) + (cityName == null ? "" : " " + cityName))
                     .add(humanStatus)
                     .add("");
         }

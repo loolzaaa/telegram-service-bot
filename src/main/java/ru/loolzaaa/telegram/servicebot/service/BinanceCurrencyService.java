@@ -1,4 +1,4 @@
-package ru.loolzaaa.telegram.loolzbot.service;
+package ru.loolzaaa.telegram.servicebot.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

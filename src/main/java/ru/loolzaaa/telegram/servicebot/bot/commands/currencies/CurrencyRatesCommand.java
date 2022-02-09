@@ -1,16 +1,17 @@
-package ru.loolzaaa.telegram.loolzbot.bot.commands.currencies;
+package ru.loolzaaa.telegram.servicebot.bot.commands.currencies;
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.bots.AbsSender;
-import ru.loolzaaa.telegram.loolzbot.bot.commands.CommonCommand;
-import ru.loolzaaa.telegram.loolzbot.service.BinanceCurrencyService;
+import ru.loolzaaa.telegram.servicebot.bot.commands.CommonCommand;
+import ru.loolzaaa.telegram.servicebot.bot.pojo.Configuration;
+import ru.loolzaaa.telegram.servicebot.service.BinanceCurrencyService;
 
 public class CurrencyRatesCommand extends CommonCommand {
 
-    public CurrencyRatesCommand(String commandIdentifier, String description) {
-        super(commandIdentifier, description);
+    public CurrencyRatesCommand(String commandIdentifier, String description, Configuration configuration) {
+        super(commandIdentifier, description, configuration);
     }
 
     @Override

@@ -1,4 +1,4 @@
-package ru.loolzaaa.telegram.loolzbot.bot.commands.currencies;
+package ru.loolzaaa.telegram.servicebot.bot.commands.currencies;
 
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -8,14 +8,15 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.bots.AbsSender;
-import ru.loolzaaa.telegram.loolzbot.bot.commands.CommonCommand;
+import ru.loolzaaa.telegram.servicebot.bot.commands.CommonCommand;
+import ru.loolzaaa.telegram.servicebot.bot.pojo.Configuration;
 
 import java.util.List;
 
 public class RatesInlineMenuCommand extends CommonCommand {
 
-    public RatesInlineMenuCommand(String commandIdentifier, String description) {
-        super(commandIdentifier, description);
+    public RatesInlineMenuCommand(String commandIdentifier, String description, Configuration configuration) {
+        super(commandIdentifier, description, configuration);
     }
 
     @Override
