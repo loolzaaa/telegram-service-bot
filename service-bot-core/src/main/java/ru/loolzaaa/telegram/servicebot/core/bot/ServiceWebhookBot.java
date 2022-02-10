@@ -25,13 +25,16 @@ import java.util.List;
 
 public class ServiceWebhookBot extends TelegramWebhookCommandBot {
 
+    private String botPath;
+
     private String nameVariable;
     private String tokenVariable;
 
     private Configuration configuration;
 
-    public ServiceWebhookBot(Configuration configuration, String nameVariable, String tokenVariable) {
+    public ServiceWebhookBot(Configuration configuration, String botPath, String nameVariable, String tokenVariable) {
         this.configuration = configuration;
+        this.botPath = botPath;
         this.nameVariable = nameVariable;
         this.tokenVariable = tokenVariable;
         register(new StartCommand("start", "Старт", configuration));
@@ -41,8 +44,8 @@ public class ServiceWebhookBot extends TelegramWebhookCommandBot {
         register(new ClearConfigCommand("clearconfig", "", configuration));
     }
 
-    public ServiceWebhookBot(Configuration configuration) {
-        this(configuration, null, null);
+    public ServiceWebhookBot(Configuration configuration, String botPath) {
+        this(configuration, botPath, null, null);
     }
 
     @Override
@@ -179,7 +182,7 @@ public class ServiceWebhookBot extends TelegramWebhookCommandBot {
 
     @Override
     public String getBotPath() {
-        return null;
+        return botPath;
     }
 
     public Configuration getConfiguration() {

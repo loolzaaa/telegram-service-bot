@@ -37,7 +37,7 @@ public class TelegramBotAWSLambdaFunction implements RequestHandler<APIGatewayV2
 	public APIGatewayV2HTTPResponse handleRequest(APIGatewayV2HTTPEvent apiGatewayV2HTTPEvent, Context context) {
 		Configuration configuration = loadConfigurationFromS3();
 
-		this.bot = new ServiceWebhookBot(configuration);
+		this.bot = new ServiceWebhookBot(configuration, null);
 
 		Map<String, String> headers = new HashMap<>();
 		headers.put("Content-Type", "application/json;charset=UTF-8");
