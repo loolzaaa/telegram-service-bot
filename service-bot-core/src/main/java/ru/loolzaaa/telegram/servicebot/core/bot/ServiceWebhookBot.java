@@ -25,15 +25,24 @@ import java.util.List;
 
 public class ServiceWebhookBot extends TelegramWebhookCommandBot {
 
+    private String nameVariable;
+    private String tokenVariable;
+
     private Configuration configuration;
 
-    public void init(Configuration configuration) {
+    public ServiceWebhookBot(Configuration configuration, String nameVariable, String tokenVariable) {
         this.configuration = configuration;
+        this.nameVariable = nameVariable;
+        this.tokenVariable = tokenVariable;
         register(new StartCommand("start", "Старт", configuration));
         register(new RatesInlineMenuCommand("rates", "Меню курсов валют", configuration));
         register(new CurrencyRatesCommand("rate", "Курс валют", configuration));
         register(new TrackHistoryCommand("trackhistory", "История отслеживаний", configuration));
         register(new ClearConfigCommand("clearconfig", "", configuration));
+    }
+
+    public ServiceWebhookBot(Configuration configuration) {
+        this(configuration, null, null);
     }
 
     @Override
@@ -160,12 +169,12 @@ public class ServiceWebhookBot extends TelegramWebhookCommandBot {
 
     @Override
     public String getBotToken() {
-        return System.getenv("bot_token");
+        return System.getenv(tokenVariable == null ? "bot_token" : tokenVariable);
     }
 
     @Override
     public String getBotUsername() {
-        return System.getenv("bot_name");
+        return System.getenv(nameVariable == null ? "bot_name" : nameVariable);
     }
 
     @Override
