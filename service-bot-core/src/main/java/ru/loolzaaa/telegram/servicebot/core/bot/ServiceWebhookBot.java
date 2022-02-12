@@ -15,6 +15,7 @@ import ru.loolzaaa.telegram.servicebot.core.bot.pojo.User;
 import ru.loolzaaa.telegram.servicebot.core.commands.ClearConfigCommand;
 import ru.loolzaaa.telegram.servicebot.core.commands.StartCommand;
 import ru.loolzaaa.telegram.servicebot.core.commands.TrackHistoryCommand;
+import ru.loolzaaa.telegram.servicebot.core.commands.circleci.CircleCIResultCommand;
 import ru.loolzaaa.telegram.servicebot.core.commands.currencies.CurrencyRatesCommand;
 import ru.loolzaaa.telegram.servicebot.core.commands.currencies.RatesInlineMenuCommand;
 import ru.loolzaaa.telegram.servicebot.core.service.RussianPostTrackingService;
@@ -42,6 +43,7 @@ public class ServiceWebhookBot extends TelegramWebhookCommandBot {
         register(new CurrencyRatesCommand("rate", "Курс валют", configuration));
         register(new TrackHistoryCommand("trackhistory", "История отслеживаний", configuration));
         register(new ClearConfigCommand("clearconfig", "", configuration));
+        register(new CircleCIResultCommand("circleci_result", "CircleCI Webhook", configuration));
     }
 
     public ServiceWebhookBot(Configuration configuration, String botPath) {
@@ -65,6 +67,10 @@ public class ServiceWebhookBot extends TelegramWebhookCommandBot {
     public void processNonCommandUpdate(Update update) {
         if (update.hasCallbackQuery()) {
             processCallbackQueryUpdate(update);
+            return;
+        }
+        if (!update.hasMessage()) {
+            System.err.println(update);
             return;
         }
 
