@@ -15,12 +15,14 @@ import ru.loolzaaa.telegram.servicebot.core.bot.pojo.User;
 import ru.loolzaaa.telegram.servicebot.core.commands.ClearConfigCommand;
 import ru.loolzaaa.telegram.servicebot.core.commands.StartCommand;
 import ru.loolzaaa.telegram.servicebot.core.commands.TrackHistoryCommand;
+import ru.loolzaaa.telegram.servicebot.core.commands.circleci.CircleCICommand;
 import ru.loolzaaa.telegram.servicebot.core.commands.circleci.CircleCIResultCommand;
 import ru.loolzaaa.telegram.servicebot.core.commands.currencies.CurrencyRatesCommand;
 import ru.loolzaaa.telegram.servicebot.core.commands.currencies.RatesInlineMenuCommand;
 import ru.loolzaaa.telegram.servicebot.core.service.RussianPostTrackingService;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -44,6 +46,7 @@ public class ServiceWebhookBot extends TelegramWebhookCommandBot {
         register(new TrackHistoryCommand("trackhistory", "История отслеживаний", configuration));
         register(new ClearConfigCommand("clearconfig", "", configuration));
         register(new CircleCIResultCommand("circleci_result", "CircleCI Webhook", configuration));
+        register(new CircleCICommand("circleci", "CircleCI API", configuration));
     }
 
     public ServiceWebhookBot(Configuration configuration, String botPath) {
@@ -56,9 +59,19 @@ public class ServiceWebhookBot extends TelegramWebhookCommandBot {
             Message message = update.getMessage();
             org.telegram.telegrambots.meta.api.objects.User user = message.getFrom();
             if (configuration.getUserById(user.getId()) == null) {
-                configuration.getUsers().add(new User(user.getId()));
+                User configUser = new User();
+                configUser.setId(user.getId());
+                configUser.setCircleCIProjects(new ArrayList<>());
+                configUser.setTrackHistory(new ArrayList<>());
+                configuration.getUsers().add(configUser);
             }
-            configuration.getUserById(user.getId()).setLastActivity(LocalDateTime.now());
+            User configUser = configuration.getUserById(user.getId());
+            configUser.setFirstName(user.getFirstName());
+            configUser.setUsername(user.getUserName());
+            configUser.setChatId(update.getMessage().getChat().getId());
+            if (configUser.getCircleCIProjects() == null) configUser.setCircleCIProjects(new ArrayList<>());
+            if (configUser.getTrackHistory() == null) configUser.setTrackHistory(new ArrayList<>());
+            configUser.setLastActivity(LocalDateTime.now());
         }
         return super.onWebhookUpdateReceived(update);
     }
