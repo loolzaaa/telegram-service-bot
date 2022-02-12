@@ -43,8 +43,8 @@ public class CircleCIRequestToUpdateConverter {
         return new StringJoiner(" ", "/circleci_result ", "")
                 .add(request.getType() != null ? request.getType() : "EMPTY_TYPE")
                 .add(request.getHappenedAt() != null ? request.getHappenedAt() : "EMPTY_TIME")
-                .add(request.getProject() != null ? request.getProject().getId() : "EMPTY_PROJECT_ID")
                 .add(request.getProject() != null ? request.getProject().getName() : "EMPTY_PROJECT_NAME")
+                .add(request.getProject() != null ? request.getProject().getSlug() : "EMPTY_PROJECT_SLUG")
                 .add(request.getWorkflow() != null ? request.getWorkflow().getName() : "EMPTY_WORKFLOW_NAME")
                 .add(request.getWorkflow() != null ? request.getWorkflow().getStatus() : "EMPTY_WORKFLOW_STATUS")
                 .toString();
