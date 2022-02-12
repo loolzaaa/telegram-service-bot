@@ -10,16 +10,21 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiValidationException;
 import ru.loolzaaa.telegram.servicebot.core.bot.ServiceWebhookBot;
 import ru.loolzaaa.telegram.servicebot.core.bot.pojo.Configuration;
+import ru.loolzaaa.telegram.servicebot.lambda.request.RequestDispatcher;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.Map;
 
-public class TelegramBotAWSLambdaFunction implements RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HTTPResponse> {
+public class AWSLambdaTelegramBotRequestHandler implements RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HTTPResponse> {
 
 	private static final S3Client S3;
 
@@ -30,12 +35,12 @@ public class TelegramBotAWSLambdaFunction implements RequestHandler<APIGatewayV2
 	private static final Configuration configuration;
 
 	static {
+		objectMapper = new ObjectMapper();
+		objectMapper.registerModule(new JavaTimeModule());
+
 		S3 = S3Client.builder().region(Region.US_EAST_2).build();
 
 		configuration = loadConfigurationFromS3();
-
-		objectMapper = new ObjectMapper();
-		objectMapper.registerModule(new JavaTimeModule());
 
 		ServiceWebhookBot bot = new ServiceWebhookBot(configuration, null);
 		requestDispatcher = new RequestDispatcher(bot);
@@ -44,6 +49,9 @@ public class TelegramBotAWSLambdaFunction implements RequestHandler<APIGatewayV2
 
 	@Override
 	public APIGatewayV2HTTPResponse handleRequest(APIGatewayV2HTTPEvent apiGatewayV2HTTPEvent, Context context) {
+		final String routeKey = apiGatewayV2HTTPEvent.getRouteKey().substring(apiGatewayV2HTTPEvent.getRouteKey().indexOf("/"));
+		context.getLogger().log(String.format("Request from: %s -> %s", apiGatewayV2HTTPEvent.getRouteKey(), routeKey));
+
 		Map<String, String> headers = Map.of("Content-Type", "application/json;charset=UTF-8");
 		APIGatewayV2HTTPResponse apiResponse = APIGatewayV2HTTPResponse.builder()
 				.withIsBase64Encoded(false)
@@ -51,12 +59,14 @@ public class TelegramBotAWSLambdaFunction implements RequestHandler<APIGatewayV2
 				.withStatusCode(200)
 				.build();
 		try {
-			apiResponse.setBody(requestDispatcher.dispatch(apiGatewayV2HTTPEvent, context));
+			apiResponse.setBody(requestDispatcher.dispatch(routeKey, apiGatewayV2HTTPEvent, context));
 			return apiResponse;
 		} catch (JsonProcessingException | TelegramApiValidationException e) {
+			context.getLogger().log("Incorrect request: " + e.getMessage());
 			apiResponse.setStatusCode(400);
 			return apiResponse;
 		} catch (Exception e) {
+			e.printStackTrace();
 			apiResponse.setStatusCode(500);
 			return apiResponse;
 		} finally {
