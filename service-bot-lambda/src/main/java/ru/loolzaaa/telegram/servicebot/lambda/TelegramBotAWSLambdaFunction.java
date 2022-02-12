@@ -4,10 +4,9 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
-import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiValidationException;
 import ru.loolzaaa.telegram.servicebot.core.bot.ServiceWebhookBot;
 import ru.loolzaaa.telegram.servicebot.core.bot.pojo.Configuration;
@@ -18,68 +17,60 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 public class TelegramBotAWSLambdaFunction implements RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HTTPResponse> {
 
-	private static final S3Client S3 = S3Client.builder().region(Region.US_EAST_2).build();
+	private static final S3Client S3;
 
-	private static final ObjectMapper MAPPER = new ObjectMapper();
+	private static final RequestDispatcher requestDispatcher;
 
-	private ServiceWebhookBot bot;
+	private static final ObjectMapper objectMapper;
+
+	private static final Configuration configuration;
 
 	static {
-		MAPPER.registerModule(new JavaTimeModule());
+		S3 = S3Client.builder().region(Region.US_EAST_2).build();
+
+		configuration = loadConfigurationFromS3();
+
+		objectMapper = new ObjectMapper();
+		objectMapper.registerModule(new JavaTimeModule());
+
+		ServiceWebhookBot bot = new ServiceWebhookBot(configuration, null);
+		requestDispatcher = new RequestDispatcher(bot);
+		requestDispatcher.setObjectMapper(objectMapper);
 	}
 
 	@Override
 	public APIGatewayV2HTTPResponse handleRequest(APIGatewayV2HTTPEvent apiGatewayV2HTTPEvent, Context context) {
-		Configuration configuration = loadConfigurationFromS3();
-
-		this.bot = new ServiceWebhookBot(configuration, null);
-
-		Map<String, String> headers = new HashMap<>();
-		headers.put("Content-Type", "application/json;charset=UTF-8");
-
-		int status;
-		String body;
-		BotApiMethod<?> method;
-		try {
-			Update update = MAPPER.readValue(apiGatewayV2HTTPEvent.getBody(), Update.class);
-			method = this.bot.onWebhookUpdateReceived(update);
-			if (method != null) {
-				method.validate();
-				status = 200;
-				body = MAPPER.writeValueAsString(method);
-			} else {
-				status = 200;
-				body = "{}";
-			}
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		} catch (TelegramApiValidationException e) {
-			status = 500;
-			body = "{}";
-		}
-
-		saveConfigurationToS3();
-
-		return APIGatewayV2HTTPResponse.builder()
-				.withStatusCode(status)
+		Map<String, String> headers = Map.of("Content-Type", "application/json;charset=UTF-8");
+		APIGatewayV2HTTPResponse apiResponse = APIGatewayV2HTTPResponse.builder()
 				.withIsBase64Encoded(false)
 				.withHeaders(headers)
-				.withBody(body)
+				.withStatusCode(200)
 				.build();
+		try {
+			apiResponse.setBody(requestDispatcher.dispatch(apiGatewayV2HTTPEvent, context));
+			return apiResponse;
+		} catch (JsonProcessingException | TelegramApiValidationException e) {
+			apiResponse.setStatusCode(400);
+			return apiResponse;
+		} catch (Exception e) {
+			apiResponse.setStatusCode(500);
+			return apiResponse;
+		} finally {
+			saveConfigurationToS3();
+		}
 	}
 
-	private Configuration loadConfigurationFromS3() {
+	private static Configuration loadConfigurationFromS3() {
 		GetObjectRequest request = GetObjectRequest.builder()
 				.bucket(System.getenv("s3_config_bucket"))
 				.key(System.getenv("s3_config_key"))
 				.build();
 		try {
-			return MAPPER.readValue(S3.getObject(request), Configuration.class);
+			return objectMapper.readValue(S3.getObject(request), Configuration.class);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -91,7 +82,7 @@ public class TelegramBotAWSLambdaFunction implements RequestHandler<APIGatewayV2
 				.key(System.getenv("s3_config_key"))
 				.build();
 		try {
-			S3.putObject(request, RequestBody.fromString(MAPPER.writeValueAsString(this.bot.getConfiguration())));
+			S3.putObject(request, RequestBody.fromString(objectMapper.writeValueAsString(configuration)));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
