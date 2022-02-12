@@ -23,78 +23,77 @@ import java.util.Map;
 
 public class TelegramBotAWSLambdaFunction implements RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HTTPResponse> {
 
-    private static final S3Client S3 = S3Client.builder().region(Region.US_EAST_2).build();
+	private static final S3Client S3 = S3Client.builder().region(Region.US_EAST_2).build();
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+	private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private ServiceWebhookBot bot;
+	private ServiceWebhookBot bot;
 
-    static {
-        MAPPER.registerModule(new JavaTimeModule());
-    }
+	static {
+		MAPPER.registerModule(new JavaTimeModule());
+	}
 
-    @Override
-    public APIGatewayV2HTTPResponse handleRequest(APIGatewayV2HTTPEvent apiGatewayV2HTTPEvent, Context context) {
-        Configuration configuration = loadConfigurationFromS3();
+	@Override
+	public APIGatewayV2HTTPResponse handleRequest(APIGatewayV2HTTPEvent apiGatewayV2HTTPEvent, Context context) {
+		Configuration configuration = loadConfigurationFromS3();
 
-        this.bot = new ServiceWebhookBot();
-        this.bot.init(configuration);
+		this.bot = new ServiceWebhookBot(configuration, null);
 
-        Map<String, String> headers = new HashMap<>();
-        headers.put("Content-Type", "application/json;charset=UTF-8");
+		Map<String, String> headers = new HashMap<>();
+		headers.put("Content-Type", "application/json;charset=UTF-8");
 
-        int status;
-        String body;
-        BotApiMethod<?> method;
-        try {
-            Update update = MAPPER.readValue(apiGatewayV2HTTPEvent.getBody(), Update.class);
-            method = this.bot.onWebhookUpdateReceived(update);
-            if (method != null) {
-                method.validate();
-                status = 200;
-                body = MAPPER.writeValueAsString(method);
-            } else {
-                status = 200;
-                body = "{}";
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (TelegramApiValidationException e) {
-            status = 500;
-            body = "{}";
-        }
+		int status;
+		String body;
+		BotApiMethod<?> method;
+		try {
+			Update update = MAPPER.readValue(apiGatewayV2HTTPEvent.getBody(), Update.class);
+			method = this.bot.onWebhookUpdateReceived(update);
+			if (method != null) {
+				method.validate();
+				status = 200;
+				body = MAPPER.writeValueAsString(method);
+			} else {
+				status = 200;
+				body = "{}";
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		} catch (TelegramApiValidationException e) {
+			status = 500;
+			body = "{}";
+		}
 
-        saveConfigurationToS3();
+		saveConfigurationToS3();
 
-        return APIGatewayV2HTTPResponse.builder()
-                .withStatusCode(status)
-                .withIsBase64Encoded(false)
-                .withHeaders(headers)
-                .withBody(body)
-                .build();
-    }
+		return APIGatewayV2HTTPResponse.builder()
+				.withStatusCode(status)
+				.withIsBase64Encoded(false)
+				.withHeaders(headers)
+				.withBody(body)
+				.build();
+	}
 
-    private Configuration loadConfigurationFromS3() {
-        GetObjectRequest request = GetObjectRequest.builder()
-                .bucket(System.getenv("s3_config_bucket"))
-                .key(System.getenv("s3_config_key"))
-                .build();
-        try {
-            return MAPPER.readValue(S3.getObject(request), Configuration.class);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+	private Configuration loadConfigurationFromS3() {
+		GetObjectRequest request = GetObjectRequest.builder()
+				.bucket(System.getenv("s3_config_bucket"))
+				.key(System.getenv("s3_config_key"))
+				.build();
+		try {
+			return MAPPER.readValue(S3.getObject(request), Configuration.class);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-    private void saveConfigurationToS3() {
-        PutObjectRequest request = PutObjectRequest.builder()
-                .bucket(System.getenv("s3_config_bucket"))
-                .key(System.getenv("s3_config_key"))
-                .build();
-        try {
-            S3.putObject(request, RequestBody.fromString(MAPPER.writeValueAsString(this.bot.getConfiguration())));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+	private void saveConfigurationToS3() {
+		PutObjectRequest request = PutObjectRequest.builder()
+				.bucket(System.getenv("s3_config_bucket"))
+				.key(System.getenv("s3_config_key"))
+				.build();
+		try {
+			S3.putObject(request, RequestBody.fromString(MAPPER.writeValueAsString(this.bot.getConfiguration())));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 }

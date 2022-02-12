@@ -17,10 +17,19 @@ import java.util.List;
 
 public class ServiceLongPollingBot extends TelegramLongPollingCommandBot {
 
-    public ServiceLongPollingBot() {
+    private String nameVariable;
+    private String tokenVariable;
+
+    public ServiceLongPollingBot(String nameVariable, String tokenVariable) {
+        this.nameVariable = nameVariable;
+        this.tokenVariable = tokenVariable;
         register(new StartCommand("start", "Старт"));
         register(new RatesInlineMenuCommand("rates", "Меню курсов валют"));
         register(new CurrencyRatesCommand("rate", "Курс валют"));
+    }
+
+    public ServiceLongPollingBot() {
+        this(null, null);
     }
 
     @Override
@@ -91,11 +100,11 @@ public class ServiceLongPollingBot extends TelegramLongPollingCommandBot {
 
     @Override
     public String getBotToken() {
-        return System.getenv("bot.token");
+        return System.getenv(tokenVariable == null ? "bot_token" : tokenVariable);
     }
 
     @Override
     public String getBotUsername() {
-        return System.getenv("bot.name");
+        return System.getenv(nameVariable == null ? "bot_name" : nameVariable);
     }
 }
