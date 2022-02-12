@@ -8,8 +8,8 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.bots.AbsSender;
-import ru.loolzaaa.telegram.servicebot.core.commands.CommonCommand;
 import ru.loolzaaa.telegram.servicebot.core.bot.pojo.Configuration;
+import ru.loolzaaa.telegram.servicebot.core.commands.CommonCommand;
 
 import java.util.List;
 

@@ -4,8 +4,8 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.bots.AbsSender;
-import ru.loolzaaa.telegram.servicebot.core.commands.CommonCommand;
 import ru.loolzaaa.telegram.servicebot.core.bot.pojo.Configuration;
+import ru.loolzaaa.telegram.servicebot.core.commands.CommonCommand;
 import ru.loolzaaa.telegram.servicebot.core.service.BinanceCurrencyService;
 
 public class CurrencyRatesCommand extends CommonCommand {
