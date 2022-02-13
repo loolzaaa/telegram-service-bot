@@ -9,10 +9,14 @@ import ru.loolzaaa.telegram.servicebot.core.command.CommonCommand;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.CircleCIBotUser;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.CircleCISubscription;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class CircleCIResultCommand extends CommonCommand<CircleCIBotUser> {
+
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
     public CircleCIResultCommand(String commandIdentifier, String description, BotConfiguration<CircleCIBotUser> configuration) {
         super(commandIdentifier, description, configuration);
@@ -21,12 +25,12 @@ public class CircleCIResultCommand extends CommonCommand<CircleCIBotUser> {
     @Override
     public void execute(AbsSender absSender, User user, Chat chat, String[] arguments) {
         if (arguments.length >= 6) {
-            final String type = arguments[0];
-            final String time = arguments[1];
-            final String projectName = arguments[2];
+            String type = arguments[0];
+            LocalDateTime time = LocalDateTime.parse(arguments[1], DATE_TIME_FORMATTER);
+            String projectName = arguments[2];
             String projectSlug = arguments[3];
-            final String workflowName = arguments[4];
-            final String workflowStatus = arguments[5];
+            String workflowName = arguments[4];
+            String workflowStatus = arguments[5];
             if ("workflow-completed".equals(type)) {
                 if (projectSlug.toLowerCase().startsWith("gh")) projectSlug = "github" + projectSlug.substring(2);
                 if (projectSlug.toLowerCase().startsWith("bb")) projectSlug = "bitbucket" + projectSlug.substring(2);
@@ -36,6 +40,7 @@ public class CircleCIResultCommand extends CommonCommand<CircleCIBotUser> {
                         .filter(u -> {
                             List<CircleCISubscription> subscriptions = u.getSubscriptions();
                             List<String> slugs = subscriptions.stream()
+                                    .filter(subscription -> subscription.getSlug() != null)
                                     .map(subscription -> subscription.getSlug().toLowerCase())
                                     .collect(Collectors.toList());
                             return slugs.contains(conditionSlug.toLowerCase());
@@ -43,7 +48,7 @@ public class CircleCIResultCommand extends CommonCommand<CircleCIBotUser> {
                         .forEach(u -> {
                             SendMessage message = new SendMessage();
                             message.setChatId(u.getChatId().toString());
-                            message.setText(String.join(" ", arguments));
+                            message.setText(String.join("\n", projectName, workflowStatus));
                             sendAnswer(absSender, message);
                         });
             } else {
