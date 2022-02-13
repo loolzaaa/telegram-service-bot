@@ -9,6 +9,7 @@ import org.telegram.telegrambots.meta.api.objects.MessageEntity;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.loolzaaa.telegram.servicebot.core.bot.pojo.Configuration;
+import ru.loolzaaa.telegram.servicebot.core.bot.pojo.TrackEntry;
 import ru.loolzaaa.telegram.servicebot.core.bot.pojo.User;
 import ru.loolzaaa.telegram.servicebot.core.commands.ClearConfigCommand;
 import ru.loolzaaa.telegram.servicebot.core.commands.StartCommand;
@@ -21,6 +22,7 @@ import ru.loolzaaa.telegram.servicebot.core.service.RussianPostTrackingService;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class ServiceLongPollingBot extends TelegramLongPollingCommandBot {
@@ -83,24 +85,67 @@ public class ServiceLongPollingBot extends TelegramLongPollingCommandBot {
             return;
         }
 
-        String msgText = update.getMessage().getText().toUpperCase();
-
-        SendMessage message = new SendMessage(); // Create a SendMessage object with mandatory fields
+        SendMessage message = new SendMessage();
         message.setChatId(update.getMessage().getChatId().toString());
-        message.setText(String.format("Accepted: %s. Tracking...", msgText));
 
-        try {
-            execute(message); // Call method to send the message
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
+        String msgText = update.getMessage().getText();
 
-        try {
-            String answer = RussianPostTrackingService.track(msgText);
-            message.setText(answer);
-        } catch (Exception e) {
-            e.printStackTrace();
-            message.setText("Ошибка");
+        String probablyTrackNumber = msgText.split("\\s")[0];
+        if (RussianPostTrackingService.validateTrackNumber(probablyTrackNumber)) {
+            Long userId = update.getMessage().getFrom().getId();
+            List<TrackEntry> trackHistory = configuration.getUserById(userId).getTrackHistory();
+
+            String trackNumber = probablyTrackNumber.toUpperCase();
+            String description = null;
+            try {
+                int firstSpaceIndex = msgText.indexOf(" ");
+                if (firstSpaceIndex != -1) {
+                    description = msgText.substring(msgText.indexOf(" ") + 1).trim();
+                    if (description.length() > 128) description = description.substring(0, 128);
+                    if ("".equals(description)) description = null;
+                }
+            } catch (Exception ignored) {}
+
+            TrackEntry entry = new TrackEntry();
+            entry.setNumber(trackNumber);
+            entry.setLastActivity(LocalDateTime.now());
+            entry.setDescription(description);
+
+            if (!trackHistory.contains(entry)) {
+                trackHistory.add(entry);
+            } else {
+                for (TrackEntry e : trackHistory) {
+                    if (e.equals(entry)) {
+                        if (description != null) e.setDescription(description);
+                        description = e.getDescription();
+                        e.setLastActivity(LocalDateTime.now());
+                    }
+                }
+            }
+            if (description == null) {
+                description = "Описание не задано. Можно задать при запросе, отделив пробелом";
+            }
+            message.setText(String.format("Номер отслеживания: %s\n%s\nПодождите...", trackNumber, description));
+            try {
+                execute(message);
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                String answer = RussianPostTrackingService.track(trackNumber);
+                message.setText(answer);
+            } catch (Exception e) {
+                e.printStackTrace();
+                message.setText("Ошибка. Попробуйте позже.");
+            }
+
+            new Thread(() -> {
+                trackHistory.sort(Comparator.comparing(TrackEntry::getLastActivity));
+                while (trackHistory.size() > 10) trackHistory.remove(0);
+            }).start();
+        } else {
+            message.setText("Некорректный трек номер");
         }
 
         try {
