@@ -6,10 +6,10 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
-import org.telegram.telegrambots.meta.api.methods.updates.SetWebhook;
-import ru.loolzaaa.telegram.servicebot.core.bot.ServiceLongPollingBot;
-import ru.loolzaaa.telegram.servicebot.core.bot.ServiceWebhookBot;
-import ru.loolzaaa.telegram.servicebot.core.bot.pojo.Configuration;
+import ru.loolzaaa.telegram.servicebot.core.bot.config.BotConfiguration;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.CircleCIBotConfiguration;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.CircleCIBotUser;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.CircleCILongPollingBot;
 
 @RequiredArgsConstructor
 @SpringBootApplication
@@ -26,8 +26,9 @@ public class ServiceBotApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        SetWebhook setWebhook = SetWebhook.builder().url(webhookUrl).build();
-        telegramBotsApi.registerBot(new ServiceLongPollingBot());
-        telegramBotsApi.registerBot(new ServiceWebhookBot(new Configuration(), "service"), setWebhook);
+        BotConfiguration<CircleCIBotUser> configuration = new CircleCIBotConfiguration(CircleCIBotUser::new);
+        //SetWebhook setWebhook = SetWebhook.builder().url(webhookUrl).build();
+        telegramBotsApi.registerBot(new CircleCILongPollingBot(configuration, null, null));
+        //telegramBotsApi.registerBot(new ServiceWebhookBot(configuration, "service"), setWebhook);
     }
 }

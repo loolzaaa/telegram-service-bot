@@ -5,11 +5,13 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiValidationException;
-import ru.loolzaaa.telegram.servicebot.core.bot.ServiceWebhookBot;
-import ru.loolzaaa.telegram.servicebot.core.bot.pojo.Configuration;
+import ru.loolzaaa.telegram.servicebot.core.bot.config.BotConfiguration;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.CircleCIBotUser;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.CircleCILongWebhookBot;
 import ru.loolzaaa.telegram.servicebot.lambda.request.RequestDispatcher;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
@@ -17,11 +19,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.util.Arrays;
 import java.util.Map;
 
 public class AWSLambdaTelegramBotRequestHandler implements RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HTTPResponse> {
@@ -32,7 +30,7 @@ public class AWSLambdaTelegramBotRequestHandler implements RequestHandler<APIGat
 
 	private static final ObjectMapper objectMapper;
 
-	private static final Configuration configuration;
+	private static final BotConfiguration<CircleCIBotUser> configuration;
 
 	static {
 		objectMapper = new ObjectMapper();
@@ -42,7 +40,7 @@ public class AWSLambdaTelegramBotRequestHandler implements RequestHandler<APIGat
 
 		configuration = loadConfigurationFromS3();
 
-		ServiceWebhookBot bot = new ServiceWebhookBot(configuration, null);
+		CircleCILongWebhookBot bot = new CircleCILongWebhookBot(configuration, null, null, null);
 		requestDispatcher = new RequestDispatcher(bot);
 		requestDispatcher.setObjectMapper(objectMapper);
 	}
@@ -74,13 +72,13 @@ public class AWSLambdaTelegramBotRequestHandler implements RequestHandler<APIGat
 		}
 	}
 
-	private static Configuration loadConfigurationFromS3() {
+	private static BotConfiguration<CircleCIBotUser> loadConfigurationFromS3() {
 		GetObjectRequest request = GetObjectRequest.builder()
 				.bucket(System.getenv("s3_config_bucket"))
 				.key(System.getenv("s3_config_key"))
 				.build();
 		try {
-			return objectMapper.readValue(S3.getObject(request), Configuration.class);
+			return objectMapper.readValue(S3.getObject(request), new TypeReference<>(){});
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

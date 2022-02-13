@@ -8,6 +8,7 @@
     <module>service-bot-core</module>
     <module>service-bot-lambda</module>
     <module>service-bot-spring</module>
+    <module>service-bot-impl</module>
   </modules>
 
   <groupId>ru.loolzaaa.telegram</groupId>

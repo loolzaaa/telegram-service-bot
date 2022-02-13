@@ -31,6 +31,11 @@
       <artifactId>service-bot-core</artifactId>
       <version>0.0.1</version>
     </dependency>
+    <dependency>
+      <groupId>ru.loolzaaa.telegram</groupId>
+      <artifactId>service-bot-impl</artifactId>
+      <version>0.0.1</version>
+    </dependency>
 
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
