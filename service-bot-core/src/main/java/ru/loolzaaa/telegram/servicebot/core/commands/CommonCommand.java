@@ -10,10 +10,6 @@ public abstract class CommonCommand extends BotCommand {
 
     protected Configuration configuration;
 
-    protected CommonCommand(String commandIdentifier, String description) {
-        super(commandIdentifier, description);
-    }
-
     protected CommonCommand(String commandIdentifier, String description, Configuration configuration) {
         super(commandIdentifier, description);
         this.configuration = configuration;

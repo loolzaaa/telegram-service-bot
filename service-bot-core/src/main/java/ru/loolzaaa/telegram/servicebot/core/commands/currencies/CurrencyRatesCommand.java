@@ -10,10 +10,6 @@ import ru.loolzaaa.telegram.servicebot.core.service.BinanceCurrencyService;
 
 public class CurrencyRatesCommand extends CommonCommand {
 
-    public CurrencyRatesCommand(String commandIdentifier, String description) {
-        super(commandIdentifier, description);
-    }
-
     public CurrencyRatesCommand(String commandIdentifier, String description, Configuration configuration) {
         super(commandIdentifier, description, configuration);
     }

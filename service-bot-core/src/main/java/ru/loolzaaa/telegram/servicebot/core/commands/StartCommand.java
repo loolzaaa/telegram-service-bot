@@ -10,10 +10,6 @@ import ru.loolzaaa.telegram.servicebot.core.bot.pojo.Configuration;
 
 public class StartCommand extends CommonCommand {
 
-    public StartCommand(String commandIdentifier, String description) {
-        super(commandIdentifier, description);
-    }
-
     public StartCommand(String commandIdentifier, String description, Configuration configuration) {
         super(commandIdentifier, description, configuration);
     }

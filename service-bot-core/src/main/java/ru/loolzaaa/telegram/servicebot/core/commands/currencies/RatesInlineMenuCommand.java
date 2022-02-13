@@ -15,10 +15,6 @@ import java.util.List;
 
 public class RatesInlineMenuCommand extends CommonCommand {
 
-    public RatesInlineMenuCommand(String commandIdentifier, String description) {
-        super(commandIdentifier, description);
-    }
-
     public RatesInlineMenuCommand(String commandIdentifier, String description, Configuration configuration) {
         super(commandIdentifier, description, configuration);
     }
