@@ -1,4 +1,4 @@
-package ru.loolzaaa.telegram.servicebot.impl.circleci;
+package ru.loolzaaa.telegram.servicebot.impl.circleci.command;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,6 +11,8 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.bots.AbsSender;
 import ru.loolzaaa.telegram.servicebot.core.bot.config.BotConfiguration;
 import ru.loolzaaa.telegram.servicebot.core.command.CommonCommand;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.CircleCIBotUser;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.CircleCISubscription;
 
 import java.net.URI;
 import java.net.http.HttpClient;

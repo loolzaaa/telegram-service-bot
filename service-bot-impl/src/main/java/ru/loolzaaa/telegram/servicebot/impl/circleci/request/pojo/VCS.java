@@ -1,4 +1,4 @@
-package ru.loolzaaa.telegram.servicebot.impl.circleci.pojo;
+package ru.loolzaaa.telegram.servicebot.impl.circleci.request.pojo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;

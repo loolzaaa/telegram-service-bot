@@ -9,6 +9,9 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.loolzaaa.telegram.servicebot.core.bot.ServiceLongPollingBot;
 import ru.loolzaaa.telegram.servicebot.core.bot.config.BotConfiguration;
 import ru.loolzaaa.telegram.servicebot.core.command.ClearConfigCommand;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.command.CircleCICommand;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.command.CircleCIResultCommand;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.CircleCIBotUser;
 
 import java.util.List;
 

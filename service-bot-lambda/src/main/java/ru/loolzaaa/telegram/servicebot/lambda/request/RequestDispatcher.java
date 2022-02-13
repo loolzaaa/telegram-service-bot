@@ -8,8 +8,8 @@ import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiValidationException;
 import ru.loolzaaa.telegram.servicebot.core.bot.ServiceWebhookBot;
-import ru.loolzaaa.telegram.servicebot.impl.circleci.CircleCIRequest;
-import ru.loolzaaa.telegram.servicebot.impl.circleci.CircleCIRequestToUpdateConverter;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.request.CircleCIRequest;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.request.CircleCIRequestToUpdateConverter;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;

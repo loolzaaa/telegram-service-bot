@@ -1,4 +1,4 @@
-package ru.loolzaaa.telegram.servicebot.impl.circleci;
+package ru.loolzaaa.telegram.servicebot.impl.circleci.command;
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Chat;
@@ -6,6 +6,8 @@ import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 import ru.loolzaaa.telegram.servicebot.core.bot.config.BotConfiguration;
 import ru.loolzaaa.telegram.servicebot.core.command.CommonCommand;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.CircleCIBotUser;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.CircleCISubscription;
 
 import java.util.List;
 import java.util.stream.Collectors;

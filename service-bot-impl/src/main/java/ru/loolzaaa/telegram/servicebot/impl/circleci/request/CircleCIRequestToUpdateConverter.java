@@ -1,4 +1,4 @@
-package ru.loolzaaa.telegram.servicebot.impl.circleci;
+package ru.loolzaaa.telegram.servicebot.impl.circleci.request;
 
 import org.telegram.telegrambots.meta.api.objects.*;
 

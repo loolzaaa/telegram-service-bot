@@ -1,10 +1,10 @@
-package ru.loolzaaa.telegram.servicebot.impl.circleci;
+package ru.loolzaaa.telegram.servicebot.impl.circleci.request;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
-import ru.loolzaaa.telegram.servicebot.impl.circleci.pojo.*;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.request.pojo.*;
 
 @Getter
 @Setter

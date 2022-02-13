@@ -7,9 +7,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import ru.loolzaaa.telegram.servicebot.core.bot.config.BotConfiguration;
-import ru.loolzaaa.telegram.servicebot.impl.circleci.CircleCIBotConfiguration;
-import ru.loolzaaa.telegram.servicebot.impl.circleci.CircleCIBotUser;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.CircleCILongPollingBot;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.config.CircleCIBotConfiguration;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.CircleCIBotUser;
 
 @RequiredArgsConstructor
 @SpringBootApplication
