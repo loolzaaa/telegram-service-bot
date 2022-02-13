@@ -8,4 +8,5 @@ import lombok.Setter;
 public class CircleCISubscription {
     private String name;
     private String slug;
+    private String pat;
 }

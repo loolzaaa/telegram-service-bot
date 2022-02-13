@@ -12,5 +12,6 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 public class CircleCIBotUser extends AbstractUser {
+    private String status = "default"; // default, add-subscription-pat, add-subscription-slug, del-subscription
     private List<CircleCISubscription> subscriptions = new ArrayList<>();
 }
