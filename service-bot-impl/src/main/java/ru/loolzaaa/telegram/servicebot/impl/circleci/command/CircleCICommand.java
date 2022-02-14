@@ -38,36 +38,41 @@ public class CircleCICommand extends CommonCommand<CircleCIBotUser> {
             final String subCommand = arguments[0];
             CircleCIBotUser configUser = configuration.getUserById(user.getId());
 
-            if ("pat".equalsIgnoreCase(subCommand)) {
-                patSubCommand(absSender, chat, arguments, configUser);
-            } else if ("slug".equalsIgnoreCase(subCommand)) {
-                slugSubCommand(absSender, chat, arguments, configUser);
-            } else if ("add".equalsIgnoreCase(subCommand)) {
-                addSubCommand(absSender, chat, arguments, configUser);
-            } else if ("del".equalsIgnoreCase(subCommand)) {
-                delSubCommand(absSender, chat, arguments, configUser);
-            } else if ("list".equalsIgnoreCase(subCommand) && (configUser.getStatus() == UserStatus.DEFAULT)) {
-                SendMessage message = new SendMessage();
-                message.setChatId(chat.getId().toString());
-                if (configUser.getSubscriptions().size() > 0) {
-                    message.setText(
-                            configUser.getSubscriptions().stream()
-                                    .map(s -> String.format("%s (%s)", s.getName(), s.getSlug()))
-                                    .collect(Collectors.joining("\n")));
+            try {
+                if ("pat".equalsIgnoreCase(subCommand) && (configUser.getStatus() == UserStatus.ADD_SUBSCRIPTION_PAT)) {
+                    patSubCommand(absSender, chat, arguments, configUser);
+                } else if ("slug".equalsIgnoreCase(subCommand) && (configUser.getStatus() == UserStatus.ADD_SUBSCRIPTION_SLUG)) {
+                    slugSubCommand(absSender, chat, arguments, configUser);
+                } else if ("add".equalsIgnoreCase(subCommand)) {
+                    addSubCommand(absSender, chat, arguments, configUser);
+                } else if ("del".equalsIgnoreCase(subCommand)) {
+                    delSubCommand(absSender, chat, arguments, configUser);
+                } else if ("list".equalsIgnoreCase(subCommand) && (configUser.getStatus() == UserStatus.DEFAULT)) {
+                    SendMessage message = new SendMessage();
+                    message.setChatId(chat.getId().toString());
+                    if (configUser.getSubscriptions().size() > 0) {
+                        message.setText(
+                                configUser.getSubscriptions().stream()
+                                        .map(s -> String.format("%s (%s)", s.getName(), s.getSlug()))
+                                        .collect(Collectors.joining("\n")));
+                    } else {
+                        message.setText("Нет активных подписок");
+                    }
+                    sendAnswer(absSender, message);
+                } else if ("clear".equalsIgnoreCase(subCommand) && (configUser.getStatus() == UserStatus.DEFAULT)) {
+                    configUser.setSubscriptions(new ArrayList<>());
+                    sendTextAnswer(absSender, chat, "Лист подписок очищен");
+                } else if ("help".equalsIgnoreCase(subCommand) && (configUser.getStatus() == UserStatus.DEFAULT)) {
+                    sendTextAnswer(absSender, chat, getHelpText());
+                } else if ("break".equalsIgnoreCase(subCommand) && (configUser.getStatus() == UserStatus.BREAKING)) {
+                    configUser.setStatus(UserStatus.DEFAULT);
+                    sendTextAnswer(absSender, chat, "Прервано");
                 } else {
-                    message.setText("Нет активных подписок");
+                    sendTextAnswer(absSender, chat, "Неверная команда или аргументы.\nНаберите '/circleci help' для справки.");
                 }
-                sendAnswer(absSender, message);
-            } else if ("clear".equalsIgnoreCase(subCommand) && (configUser.getStatus() == UserStatus.DEFAULT)) {
-                configUser.setSubscriptions(new ArrayList<>());
-                sendTextAnswer(absSender, chat, "Лист подписок очищен");
-            } else if ("help".equalsIgnoreCase(subCommand) && (configUser.getStatus() == UserStatus.DEFAULT)) {
-                sendTextAnswer(absSender, chat, getHelpText());
-            } else if ("break".equalsIgnoreCase(subCommand) && (configUser.getStatus() == UserStatus.BREAKING)) {
+            } catch (Exception e) {
                 configUser.setStatus(UserStatus.DEFAULT);
-                sendTextAnswer(absSender, chat, "Прервано");
-            } else {
-                sendTextAnswer(absSender, chat, "Неверная команда или аргументы.\nНаберите '/circleci help' для справки.");
+                sendTextAnswer(absSender, chat, "Ошибка. Попробуйте позже");
             }
         } else {
             InlineKeyboardButton addButton = InlineKeyboardButton.builder().text("Добавить").callbackData("/circleci add").build();
@@ -90,52 +95,21 @@ public class CircleCICommand extends CommonCommand<CircleCIBotUser> {
     }
 
     private void addSubCommand(AbsSender absSender, Chat chat, String[] arguments, CircleCIBotUser configUser) {
-        if (arguments.length >= 3 && (configUser.getStatus() == UserStatus.DEFAULT)) {
-            String pat = arguments[1];
-            String slug = arguments[2];
-            if (slug.toLowerCase().startsWith("gh")) slug = "github" + slug.substring(2);
-            if (slug.toLowerCase().startsWith("bb")) slug = "bitbucket" + slug.substring(2);
-            List<String> slugs = configUser.getSubscriptions().stream()
-                    .map(subscription -> subscription.getSlug().toLowerCase())
-                    .collect(Collectors.toList());
-            if (slugs.contains(slug.toLowerCase())) {
-                sendTextAnswer(absSender, chat, "Данный проект уже содержится в листе подписок");
-                return;
-            }
-
-            HttpRequest request = HttpRequest.newBuilder(URI.create(API_PATH + "/me"))
-                    .header("Circle-Token", pat)
-                    .GET()
-                    .build();
+        if (arguments.length == 3 && (configUser.getStatus() == UserStatus.DEFAULT)) {
             try {
-                int code = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.discarding()).statusCode();
-                if (code == 200) {
-                    request = HttpRequest.newBuilder(URI.create(API_PATH + "/project/" + slug))
-                            .header("Circle-Token", pat)
-                            .GET()
-                            .build();
-                    HttpResponse<String> projectResponse = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-                    if (projectResponse.statusCode() == 200) {
-                        JsonNode projectNode = new ObjectMapper().readTree(projectResponse.body());
-                        final String projectName = projectNode.get("name").asText();
-                        CircleCISubscription subscription = new CircleCISubscription();
-                        subscription.setName(projectName);
-                        subscription.setSlug(slug);
-                        configUser.getSubscriptions().add(subscription);
-
-                        sendTextAnswer(absSender, chat, String.format("Проект %s добавлен добавлен в подписки", projectName));
-                    } else {
-                        sendTextAnswer(absSender, chat, "Неверный путь (slug) проекта");
-                    }
-                } else {
-                    sendTextAnswer(absSender, chat, "Неверный токен");
+                boolean patOk = patSubCommand(absSender, chat, arguments, configUser);
+                if (patOk) {
+                    slugSubCommand(absSender, chat, arguments, configUser);
                 }
             } catch (Exception e) {
-                sendTextAnswer(absSender, chat, "Ошибка: " + e.getMessage());
+                configUser.setStatus(UserStatus.DEFAULT);
+                sendTextAnswer(absSender, chat, "Ошибка. Попробуйте позже");
             }
-        } else if (configUser.getStatus() == UserStatus.DEFAULT) {
+        } else if (arguments.length == 1 && (configUser.getStatus() == UserStatus.DEFAULT)) {
             sendTextAnswer(absSender, chat, "Введите ваш персональный токен");
             configUser.setStatus(UserStatus.ADD_SUBSCRIPTION_PAT);
+        } else {
+            sendTextAnswer(absSender, chat, "Неверная команда или аргументы\nНаберите '/circleci help' для справки");
         }
     }
 
@@ -159,36 +133,45 @@ public class CircleCICommand extends CommonCommand<CircleCIBotUser> {
         }
     }
 
-    private void patSubCommand(AbsSender absSender, Chat chat, String[] arguments, CircleCIBotUser configUser) {
-        if (arguments.length >= 2 && (configUser.getStatus() == UserStatus.ADD_SUBSCRIPTION_PAT)) {
+    private boolean patSubCommand(AbsSender absSender, Chat chat, String[] arguments, CircleCIBotUser configUser) throws Exception {
+        boolean fromAddSubCommand = arguments.length == 3 && (configUser.getStatus() == UserStatus.DEFAULT);
+        boolean fromMainCommand = arguments.length == 2 && (configUser.getStatus() == UserStatus.ADD_SUBSCRIPTION_PAT);
+        if (fromAddSubCommand || fromMainCommand) {
             final String pat = arguments[1];
             HttpRequest request = HttpRequest.newBuilder(URI.create(API_PATH + "/me"))
                     .header("Circle-Token", pat)
                     .GET()
                     .build();
-            try {
-                int code = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.discarding()).statusCode();
-                if (code == 200) {
-                    CircleCISubscription subscription = new CircleCISubscription();
-                    subscription.setPat(pat);
-                    configUser.getSubscriptions().add(subscription);
+            int code = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.discarding()).statusCode();
+            if (code == 200) {
+                configUser.setStatus(UserStatus.ADD_SUBSCRIPTION_SLUG);
 
+                CircleCISubscription subscription = new CircleCISubscription();
+                subscription.setPat(pat);
+                configUser.getSubscriptions().add(subscription); //Must be only one place where add subscription
+
+                if (fromMainCommand) {
                     sendTextAnswer(absSender, chat, "Введите 'slug' проекта");
-
-                    configUser.setStatus(UserStatus.ADD_SUBSCRIPTION_SLUG);
-                } else {
-                    sendTextAnswer(absSender, chat, "Неверный токен");
                 }
-            } catch (Exception e) {
-                configUser.setStatus(UserStatus.DEFAULT);
-                sendTextAnswer(absSender, chat, "Ошибка: " + e.getMessage());
+                return true;
+            } else {
+                sendTextAnswer(absSender, chat, "Неверный токен\nПопробуйте еще раз");
+                return false;
             }
+        } else if (configUser.getStatus() == UserStatus.ADD_SUBSCRIPTION_PAT) {
+            sendTextAnswer(absSender, chat, "Неверный токен\nПопробуйте еще раз");
+            return false;
+        } else {
+            sendTextAnswer(absSender, chat, "Неверная команда или аргументы\nНаберите '/circleci help' для справки");
+            return false;
         }
     }
 
-    private void slugSubCommand(AbsSender absSender, Chat chat, String[] arguments, CircleCIBotUser configUser) {
-        if (arguments.length >= 2 && (configUser.getStatus() == UserStatus.ADD_SUBSCRIPTION_SLUG)) {
-            String slug = arguments[1];
+    private boolean slugSubCommand(AbsSender absSender, Chat chat, String[] arguments, CircleCIBotUser configUser) throws Exception {
+        boolean fromAddSubCommand = arguments.length == 3 && (configUser.getStatus() == UserStatus.ADD_SUBSCRIPTION_SLUG);
+        boolean fromMainCommand = arguments.length == 2 && (configUser.getStatus() == UserStatus.ADD_SUBSCRIPTION_SLUG);
+        if (fromAddSubCommand || fromMainCommand) {
+            String slug = fromMainCommand ? arguments[1] : arguments[2];
             if (slug.toLowerCase().startsWith("gh")) slug = "github" + slug.substring(2);
             if (slug.toLowerCase().startsWith("bb")) slug = "bitbucket" + slug.substring(2);
             List<String> slugs = configUser.getSubscriptions().stream()
@@ -197,13 +180,13 @@ public class CircleCICommand extends CommonCommand<CircleCIBotUser> {
                     .collect(Collectors.toList());
             if (slugs.contains(slug.toLowerCase())) {
                 configUser.setStatus(UserStatus.DEFAULT);
-                configUser.getSubscriptions().removeIf(subscription -> subscription.getSlug() == null);
+                configUser.getSubscriptions().removeIf(subscription -> subscription.getPat() == null || subscription.getSlug() == null);
                 sendTextAnswer(absSender, chat, "Данный проект уже содержится в листе подписок");
-                return;
+                return false;
             }
 
             Optional<CircleCISubscription> subscriptionOptional = configUser.getSubscriptions().stream()
-                    .filter(s -> s.getSlug() == null)
+                    .filter(s -> s.getSlug() == null) //Must be only one subscription with slug = null
                     .findFirst();
             if (subscriptionOptional.isPresent()) {
                 CircleCISubscription subscription = subscriptionOptional.get();
@@ -211,28 +194,33 @@ public class CircleCICommand extends CommonCommand<CircleCIBotUser> {
                         .header("Circle-Token", subscription.getPat())
                         .GET()
                         .build();
-                try {
-                    HttpResponse<String> projectResponse = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-                    if (projectResponse.statusCode() == 200) {
-                        JsonNode projectNode = new ObjectMapper().readTree(projectResponse.body());
-                        final String projectName = projectNode.get("name").asText();
-                        subscription.setName(projectName);
-                        subscription.setSlug(slug);
+                HttpResponse<String> projectResponse = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+                if (projectResponse.statusCode() == 200) {
+                    JsonNode projectNode = new ObjectMapper().readTree(projectResponse.body());
+                    final String projectName = projectNode.get("name").asText();
 
-                        sendTextAnswer(absSender, chat, String.format("Проект %s добавлен добавлен в подписки", projectName));
-
-                        configUser.setStatus(UserStatus.DEFAULT);
-                    } else {
-                        sendTextAnswer(absSender, chat, "Неверный путь (slug) проекта");
-                    }
-                } catch (Exception e) {
                     configUser.setStatus(UserStatus.DEFAULT);
-                    sendTextAnswer(absSender, chat, "Ошибка: " + e.getMessage());
+
+                    subscription.setName(projectName); //Must be only one place where set subscription name
+                    subscription.setSlug(slug); //Must be only one place where set subscription slug
+
+                    sendTextAnswer(absSender, chat, String.format("Проект %s добавлен добавлен в подписки", projectName));
+                    return true;
+                } else {
+                    sendTextAnswer(absSender, chat, "Неверный путь (slug) проекта");
+                    return false;
                 }
             } else {
                 configUser.setStatus(UserStatus.DEFAULT);
-                sendTextAnswer(absSender, chat, "Что-то пошло не так.\nНе могу найти создаваемую подписку.");
+                sendTextAnswer(absSender, chat, "Что-то пошло не так\nНе могу найти создаваемую подписку");
+                return false;
             }
+        } else if (configUser.getStatus() == UserStatus.ADD_SUBSCRIPTION_SLUG) {
+            sendTextAnswer(absSender, chat, "Неверный путь (slug) проекта");
+            return false;
+        } else {
+            sendTextAnswer(absSender, chat, "Неверная команда или аргументы\nНаберите '/circleci help' для справки");
+            return false;
         }
     }
 
