@@ -31,7 +31,7 @@ public class CircleCIResultCommand extends CommonCommand<CircleCIBotUser> {
             String projectSlug = arguments[3];
             String workflowName = arguments[4];
             String workflowStatus = arguments[5];
-            if ("workflow-completed".equals(type)) {
+            if (CircleCIEventType.WORKFLOW_COMPLETED.getType().equals(type)) {
                 if (projectSlug.toLowerCase().startsWith("gh")) projectSlug = "github" + projectSlug.substring(2);
                 if (projectSlug.toLowerCase().startsWith("bb")) projectSlug = "bitbucket" + projectSlug.substring(2);
 

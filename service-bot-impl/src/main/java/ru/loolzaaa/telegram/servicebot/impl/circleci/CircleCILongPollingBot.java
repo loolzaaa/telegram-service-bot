@@ -9,6 +9,7 @@ import ru.loolzaaa.telegram.servicebot.core.command.ClearConfigCommand;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.command.CircleCICommand;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.command.CircleCIResultCommand;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.CircleCIBotUser;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.UserStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,28 +31,28 @@ public class CircleCILongPollingBot extends ServiceLongPollingBot<CircleCIBotUse
                 CircleCIBotUser configUser = configuration.getUserById(user.getId());
                 if (configUser != null) {
                     if (LocalDateTime.now().minusHours(24L).isAfter(configUser.getLastActivity())) {
-                        configUser.setStatus("default");
+                        configUser.setStatus(UserStatus.DEFAULT);
                         configUser.getSubscriptions().removeIf(s -> s.getPat() == null || s.getSlug() == null);
                     }
-                    if (!"default".equals(configUser.getStatus())) {
+                    if (configUser.getStatus() != UserStatus.DEFAULT) {
                         if (update.getMessage().isCommand() && update.getMessage().getText().startsWith("/break")) {
-                            configUser.setStatus("breaking");
+                            configUser.setStatus(UserStatus.BREAKING);
                             configUser.getSubscriptions().removeIf(s -> s.getPat() == null || s.getSlug() == null);
 
-                            MessageEntity messageEntity = new MessageEntity("bot_command", 0, "/circleci".length());
+                            MessageEntity messageEntity = new MessageEntity(EntityType.BOTCOMMAND, 0, "/circleci".length());
                             update.getMessage().setText("/circleci break");
                             update.getMessage().setEntities(List.of(messageEntity));
                         }
-                        if ("add-subscription-pat".equals(configUser.getStatus())) {
-                            MessageEntity messageEntity = new MessageEntity("bot_command", 0, "/circleci".length());
+                        if (configUser.getStatus() == UserStatus.ADD_SUBSCRIPTION_PAT) {
+                            MessageEntity messageEntity = new MessageEntity(EntityType.BOTCOMMAND, 0, "/circleci".length());
                             update.getMessage().setText("/circleci pat " + update.getMessage().getText());
                             update.getMessage().setEntities(List.of(messageEntity));
-                        } else if ("add-subscription-slug".equals(configUser.getStatus())) {
-                            MessageEntity messageEntity = new MessageEntity("bot_command", 0, "/circleci".length());
+                        } else if (configUser.getStatus() == UserStatus.ADD_SUBSCRIPTION_SLUG) {
+                            MessageEntity messageEntity = new MessageEntity(EntityType.BOTCOMMAND, 0, "/circleci".length());
                             update.getMessage().setText("/circleci slug " + update.getMessage().getText());
                             update.getMessage().setEntities(List.of(messageEntity));
-                        } else if ("del-subscription".equals(configUser.getStatus())) {
-                            MessageEntity messageEntity = new MessageEntity("bot_command", 0, "/circleci".length());
+                        } else if (configUser.getStatus() == UserStatus.DEL_SUBSCRIPTION) {
+                            MessageEntity messageEntity = new MessageEntity(EntityType.BOTCOMMAND, 0, "/circleci".length());
                             update.getMessage().setText("/circleci del " + update.getMessage().getText());
                             update.getMessage().setEntities(List.of(messageEntity));
                         }
@@ -66,7 +67,7 @@ public class CircleCILongPollingBot extends ServiceLongPollingBot<CircleCIBotUse
     protected void processCallbackQueryUpdate(Update update) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
 
-        MessageEntity messageEntity = new MessageEntity("bot_command", 0, callbackQuery.getData().length());
+        MessageEntity messageEntity = new MessageEntity(EntityType.BOTCOMMAND, 0, callbackQuery.getData().length());
 
         Message message = callbackQuery.getMessage();
         message.setFrom(callbackQuery.getFrom());
