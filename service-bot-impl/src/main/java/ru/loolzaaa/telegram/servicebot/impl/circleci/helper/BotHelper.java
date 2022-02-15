@@ -18,6 +18,7 @@ import java.util.List;
  * @author Andrey Korsakov (loolzaaa)
  */
 public class BotHelper {
+
     /**
      * Replace message text in Message object to command text.
      * Also, add MessageEntity with command to Message object.

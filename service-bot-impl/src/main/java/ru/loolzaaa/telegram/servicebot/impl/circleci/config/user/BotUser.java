@@ -12,6 +12,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 public class BotUser extends AbstractUser {
+    private String localeKey = "en";
     private BotUserStatus status = BotUserStatus.DEFAULT;
     private List<Subscription> subscriptions = new ArrayList<>();
 

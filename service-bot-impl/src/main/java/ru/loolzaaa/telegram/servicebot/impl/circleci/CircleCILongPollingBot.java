@@ -8,6 +8,7 @@ import ru.loolzaaa.telegram.servicebot.core.bot.config.BotConfiguration;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUser;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUserStatus;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.helper.BotHelper;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.helper.I18n;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,6 +33,7 @@ public class CircleCILongPollingBot extends ServiceLongPollingBot<BotUser> {
                 User user = update.getMessage().getFrom();
                 BotUser configUser = configuration.getUserById(user.getId());
                 if (configUser != null) {
+                    I18n.setCurrentBundle(configUser.getLocaleKey());
                     if (LocalDateTime.now().minusHours(24L).isAfter(configUser.getLastActivity())) {
                         configUser.setStatus(BotUserStatus.DEFAULT);
                         configUser.clearUnfinishedSubscriptions();

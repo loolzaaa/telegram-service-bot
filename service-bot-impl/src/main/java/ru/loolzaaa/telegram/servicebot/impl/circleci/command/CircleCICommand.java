@@ -14,6 +14,7 @@ import ru.loolzaaa.telegram.servicebot.core.command.CommonCommand;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUser;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUserStatus;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.Subscription;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.helper.I18n;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -52,30 +53,30 @@ public class CircleCICommand extends CommonCommand<BotUser> {
                     if (configUser.getSubscriptions().size() > 0) {
                         message.setText(
                                 configUser.getSubscriptions().stream()
-                                        .map(s -> String.format("%s (%s)", s.getName(), s.getSlug()))
+                                        .map(s -> I18n.get("listCommandFormat", s.getName(), s.getSlug()))
                                         .collect(Collectors.joining("\n")));
                     } else {
-                        message.setText("Нет активных подписок");
+                        message.setText(I18n.get("listCommandEmpty"));
                     }
                     sendAnswer(absSender, message);
                     mainMenu(absSender, chat);
                 } else if ("clear".equalsIgnoreCase(subCommand) && (configUser.getStatus() == BotUserStatus.DEFAULT)) {
                     configUser.getSubscriptions().clear();
-                    sendTextAnswer(absSender, chat, "Лист подписок очищен");
+                    sendTextAnswer(absSender, chat, I18n.get("clearCommandSuccess"));
                     mainMenu(absSender, chat);
                 } else if ("help".equalsIgnoreCase(subCommand) && (configUser.getStatus() == BotUserStatus.DEFAULT)) {
                     helpSubCommand(absSender, chat, arguments, configUser);
                 } else if ("break".equalsIgnoreCase(subCommand) && (configUser.getStatus() == BotUserStatus.BREAKING)) {
                     configUser.setStatus(BotUserStatus.DEFAULT);
-                    sendTextAnswer(absSender, chat, "Прервано");
+                    sendTextAnswer(absSender, chat, I18n.get("breakCommandSuccess"));
                     mainMenu(absSender, chat);
                 } else {
-                    sendTextAnswer(absSender, chat, "Неверная команда или аргументы.\nНаберите '/circleci help' для справки.");
+                    sendTextAnswer(absSender, chat, I18n.get("invalidCommandOrArgs"));
                 }
             } catch (Exception e) {
                 configUser.setStatus(BotUserStatus.DEFAULT);
                 configUser.clearUnfinishedSubscriptions();
-                sendTextAnswer(absSender, chat, "Ошибка. Попробуйте позже");
+                sendTextAnswer(absSender, chat, I18n.get("exceptionError"));
                 mainMenu(absSender, chat);
             }
         } else {
@@ -84,19 +85,21 @@ public class CircleCICommand extends CommonCommand<BotUser> {
     }
 
     private void mainMenu(AbsSender absSender, Chat chat) {
-        InlineKeyboardButton addButton = InlineKeyboardButton.builder().text("Добавить").callbackData("/circleci add").build();
-        InlineKeyboardButton delButton = InlineKeyboardButton.builder().text("Удалить").callbackData("/circleci del").build();
-        InlineKeyboardButton listButton = InlineKeyboardButton.builder().text("Показать все").callbackData("/circleci list").build();
-        InlineKeyboardButton helpButton = InlineKeyboardButton.builder().text("Справка").callbackData("/circleci help").build();
+        InlineKeyboardButton addButton = InlineKeyboardButton.builder().text(I18n.get("mainMenuAddBtn")).callbackData("/circleci add").build();
+        InlineKeyboardButton delButton = InlineKeyboardButton.builder().text(I18n.get("mainMenuDelBtn")).callbackData("/circleci del").build();
+        InlineKeyboardButton listButton = InlineKeyboardButton.builder().text(I18n.get("mainMenuListBtn")).callbackData("/circleci list").build();
+        InlineKeyboardButton helpButton = InlineKeyboardButton.builder().text(I18n.get("mainMenuHelpBtn")).callbackData("/circleci help").build();
+        InlineKeyboardButton settingsButton = InlineKeyboardButton.builder().text(I18n.get("mainMenuSettingsBtn")).callbackData("/circleci settings").build();
 
         InlineKeyboardMarkup keyboard = InlineKeyboardMarkup.builder()
                 .keyboardRow(List.of(addButton, delButton))
                 .keyboardRow(List.of(listButton, helpButton))
+                .keyboardRow(List.of(settingsButton))
                 .build();
 
         SendMessage message = new SendMessage();
         message.setChatId(chat.getId().toString());
-        message.setText("Выберите действие для подписки:");
+        message.setText(I18n.get("mainMenuText"));
         message.setReplyMarkup(keyboard);
 
         sendAnswer(absSender, message);
@@ -109,10 +112,10 @@ public class CircleCICommand extends CommonCommand<BotUser> {
                 slugSubCommand(absSender, chat, arguments, configUser);
             }
         } else if (arguments.length == 1 && (configUser.getStatus() == BotUserStatus.DEFAULT)) {
-            sendTextAnswer(absSender, chat, "Введите ваш персональный токен");
+            sendTextAnswer(absSender, chat, I18n.get("addCommandTokenInput"));
             configUser.setStatus(BotUserStatus.ADD_SUBSCRIPTION_PAT);
         } else {
-            sendTextAnswer(absSender, chat, "Неверная команда или аргументы\nНаберите '/circleci help' для справки");
+            sendTextAnswer(absSender, chat, I18n.get("invalidCommandOrArgs"));
         }
     }
 
@@ -126,17 +129,17 @@ public class CircleCICommand extends CommonCommand<BotUser> {
             final String conditionSlug = slug;
             boolean wasDeleted = configUser.getSubscriptions().removeIf(s -> s.getSlug().equals(conditionSlug));
             if (wasDeleted) {
-                sendTextAnswer(absSender, chat, String.format("Проект %s удален из подписок", conditionSlug));
+                sendTextAnswer(absSender, chat, I18n.get("delCommandSuccess", conditionSlug));
             } else {
-                sendTextAnswer(absSender, chat, "Проект не найден в подписках");
+                sendTextAnswer(absSender, chat, I18n.get("delCommandNotFound"));
             }
             configUser.setStatus(BotUserStatus.DEFAULT);
             mainMenu(absSender, chat);
         } else if (arguments.length == 1 && configUser.getStatus() == BotUserStatus.DEFAULT) {
-            sendTextAnswer(absSender, chat, "Введите 'slug' проекта");
+            sendTextAnswer(absSender, chat, I18n.get("delCommandSlugInput"));
             configUser.setStatus(BotUserStatus.DEL_SUBSCRIPTION);
         } else {
-            sendTextAnswer(absSender, chat, "Неверная команда или аргументы\nНаберите '/circleci help' для справки");
+            sendTextAnswer(absSender, chat, I18n.get("invalidCommandOrArgs"));
         }
     }
 
@@ -158,18 +161,18 @@ public class CircleCICommand extends CommonCommand<BotUser> {
                 configUser.getSubscriptions().add(subscription); //Must be only one place where add subscription
 
                 if (fromMainCommand) {
-                    sendTextAnswer(absSender, chat, "Введите 'slug' проекта");
+                    sendTextAnswer(absSender, chat, I18n.get("patCommandSlugInput"));
                 }
                 return true;
             } else {
-                sendTextAnswer(absSender, chat, "Неверный токен\nПопробуйте еще раз");
+                sendTextAnswer(absSender, chat, I18n.get("patCommandTokenIncorrect"));
                 return false;
             }
         } else if (configUser.getStatus() == BotUserStatus.ADD_SUBSCRIPTION_PAT) {
-            sendTextAnswer(absSender, chat, "Неверный токен\nПопробуйте еще раз");
+            sendTextAnswer(absSender, chat, I18n.get("patCommandTokenIncorrect"));
             return false;
         } else {
-            sendTextAnswer(absSender, chat, "Неверная команда или аргументы\nНаберите '/circleci help' для справки");
+            sendTextAnswer(absSender, chat, I18n.get("invalidCommandOrArgs"));
             return false;
         }
     }
@@ -188,7 +191,7 @@ public class CircleCICommand extends CommonCommand<BotUser> {
             if (slugs.contains(slug.toLowerCase())) {
                 configUser.setStatus(BotUserStatus.DEFAULT);
                 configUser.clearUnfinishedSubscriptions();
-                sendTextAnswer(absSender, chat, "Данный проект уже содержится в листе подписок");
+                sendTextAnswer(absSender, chat, I18n.get("slugCommandAlreadyExist"));
                 return false;
             }
 
@@ -210,18 +213,18 @@ public class CircleCICommand extends CommonCommand<BotUser> {
                 subscription.setName(projectName); //Must be only one place where set subscription name
                 subscription.setSlug(slug); //Must be only one place where set subscription slug
 
-                sendTextAnswer(absSender, chat, String.format("Проект %s добавлен добавлен в подписки", projectName));
+                sendTextAnswer(absSender, chat, I18n.get("slugCommandSuccess", projectName));
                 mainMenu(absSender, chat);
                 return true;
             } else {
-                sendTextAnswer(absSender, chat, "Неверный путь (slug) проекта");
+                sendTextAnswer(absSender, chat, I18n.get("slugCommandSlugIncorrect"));
                 return false;
             }
         } else if (configUser.getStatus() == BotUserStatus.ADD_SUBSCRIPTION_SLUG) {
-            sendTextAnswer(absSender, chat, "Неверный путь (slug) проекта");
+            sendTextAnswer(absSender, chat, I18n.get("slugCommandSlugIncorrect"));
             return false;
         } else {
-            sendTextAnswer(absSender, chat, "Неверная команда или аргументы\nНаберите '/circleci help' для справки");
+            sendTextAnswer(absSender, chat, I18n.get("invalidCommandOrArgs"));
             return false;
         }
     }
@@ -234,7 +237,7 @@ public class CircleCICommand extends CommonCommand<BotUser> {
                 .add("`/circleci list` \\- list active CircleCI subscriptions\n")
                 .add("`/circleci clear` \\- clear list of CircleCI subscriptions\\.\n*__WARNING\\! No confirmation is needed\\!__*\n")
                 .add("`/circleci help` \\- this message\n")
-                .add("*_NOTE: 'slug' is case\\-sensitive \\(/gh/ORGANIZATION/some\\-project\\)_*")
+                .add("*_NOTE: 'slug' is case\\-sensitive\n\\(/gh/ORGANIZATION/some\\-project\\)_*")
                 .toString();
 
         SendMessage message = new SendMessage();
