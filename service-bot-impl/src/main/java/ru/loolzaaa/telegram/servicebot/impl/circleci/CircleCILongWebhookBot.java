@@ -1,37 +1,68 @@
 package ru.loolzaaa.telegram.servicebot.impl.circleci;
 
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
-import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.MessageEntity;
-import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
+import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.loolzaaa.telegram.servicebot.core.bot.ServiceWebhookBot;
 import ru.loolzaaa.telegram.servicebot.core.bot.config.BotConfiguration;
-import ru.loolzaaa.telegram.servicebot.core.command.ClearConfigCommand;
-import ru.loolzaaa.telegram.servicebot.impl.circleci.command.CircleCICommand;
-import ru.loolzaaa.telegram.servicebot.impl.circleci.command.CircleCIResultCommand;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUser;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUserStatus;
+import ru.loolzaaa.telegram.servicebot.impl.helper.BotHelper;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class CircleCILongWebhookBot extends ServiceWebhookBot<BotUser> {
 
     public CircleCILongWebhookBot(BotConfiguration<BotUser> configuration, String botPath, String nameVariable, String tokenVariable) {
         super(configuration, botPath, nameVariable, tokenVariable);
-        register(new ClearConfigCommand<>("clear_config", "Clear bot configuration", configuration));
-        register(new CircleCIResultCommand("circleci_result", "CircleCI Webhook", configuration));
-        register(new CircleCICommand("circleci", "CircleCI API", configuration));
+        BotHelper.registerAllDefaultCommands(this, configuration);
+    }
+
+    @Override
+    public BotApiMethod<?> onWebhookUpdateReceived(Update update) {
+        if (update.hasMessage()) {
+            if (update.getMessage().isCommand() && update.getMessage().getText().startsWith("/start")) {
+                BotHelper.changeMessageToCommand(update, "/circleci");
+            } else if (update.getMessage().isCommand() && update.getMessage().getText().startsWith("/help")) {
+                BotHelper.changeMessageToCommand(update, "/circleci help");
+            }
+
+            User user = update.getMessage().getFrom();
+            BotUser configUser = configuration.getUserById(user.getId());
+            if (configUser != null) {
+                if (LocalDateTime.now().minusHours(24L).isAfter(configUser.getLastActivity())) {
+                    configUser.setStatus(BotUserStatus.DEFAULT);
+                    configUser.clearUnfinishedSubscriptions();
+                }
+                if (configUser.getStatus() != BotUserStatus.DEFAULT) {
+                    if (update.getMessage().isCommand() && update.getMessage().getText().startsWith("/break")) {
+                        configUser.setStatus(BotUserStatus.BREAKING);
+                        configUser.clearUnfinishedSubscriptions();
+                        BotHelper.changeMessageToCommand(update, "/circleci break");
+                    }
+                    if (configUser.getStatus() == BotUserStatus.ADD_SUBSCRIPTION_PAT) {
+                        BotHelper.changeMessageToCommand(update, "/circleci pat " + update.getMessage().getText());
+                    } else if (configUser.getStatus() == BotUserStatus.ADD_SUBSCRIPTION_SLUG) {
+                        BotHelper.changeMessageToCommand(update, "/circleci slug " + update.getMessage().getText());
+                    } else if (configUser.getStatus() == BotUserStatus.DEL_SUBSCRIPTION) {
+                        BotHelper.changeMessageToCommand(update, "/circleci del " + update.getMessage().getText());
+                    }
+                }
+            }
+        }
+        return super.onWebhookUpdateReceived(update);
     }
 
     @Override
     protected void processCallbackQueryUpdate(Update update) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
 
-        MessageEntity messageEntity = new MessageEntity("bot_command", 0, callbackQuery.getData().length());
-        messageEntity.setText(callbackQuery.getData());
+        MessageEntity messageEntity = new MessageEntity(EntityType.BOTCOMMAND, 0, callbackQuery.getData().length());
 
         Message message = callbackQuery.getMessage();
+        message.setFrom(callbackQuery.getFrom());
         message.setText(callbackQuery.getData());
         message.setEntities(List.of(messageEntity));
 
