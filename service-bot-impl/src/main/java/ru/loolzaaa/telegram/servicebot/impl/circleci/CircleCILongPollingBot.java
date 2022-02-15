@@ -23,6 +23,12 @@ public class CircleCILongPollingBot extends ServiceLongPollingBot<CircleCIBotUse
     public void onUpdatesReceived(List<Update> updates) {
         for (Update update : updates) {
             if (update.hasMessage()) {
+                if (update.getMessage().isCommand() && update.getMessage().getText().startsWith("/start")) {
+                    BotHelper.changeMessageToCommand(update, "/circleci");
+                } else if (update.getMessage().isCommand() && update.getMessage().getText().startsWith("/help")) {
+                    BotHelper.changeMessageToCommand(update, "/circleci help");
+                }
+
                 User user = update.getMessage().getFrom();
                 CircleCIBotUser configUser = configuration.getUserById(user.getId());
                 if (configUser != null) {
@@ -34,7 +40,7 @@ public class CircleCILongPollingBot extends ServiceLongPollingBot<CircleCIBotUse
                         if (update.getMessage().isCommand() && update.getMessage().getText().startsWith("/break")) {
                             configUser.setStatus(UserStatus.BREAKING);
                             configUser.clearUnfinishedSubscriptions();
-                            BotHelper.changeMessageToCommand(update, "/cricleci break");
+                            BotHelper.changeMessageToCommand(update, "/circleci break");
                         }
                         if (configUser.getStatus() == UserStatus.ADD_SUBSCRIPTION_PAT) {
                             BotHelper.changeMessageToCommand(update, "/circleci pat " + update.getMessage().getText());
