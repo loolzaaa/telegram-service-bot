@@ -7,7 +7,7 @@ import ru.loolzaaa.telegram.servicebot.core.bot.ServiceLongPollingBot;
 import ru.loolzaaa.telegram.servicebot.core.bot.config.BotConfiguration;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUser;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUserStatus;
-import ru.loolzaaa.telegram.servicebot.impl.helper.BotHelper;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.helper.BotHelper;
 
 import java.time.LocalDateTime;
 import java.util.List;

@@ -8,14 +8,14 @@ import ru.loolzaaa.telegram.servicebot.core.bot.ServiceWebhookBot;
 import ru.loolzaaa.telegram.servicebot.core.bot.config.BotConfiguration;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUser;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUserStatus;
-import ru.loolzaaa.telegram.servicebot.impl.helper.BotHelper;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.helper.BotHelper;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class CircleCILongWebhookBot extends ServiceWebhookBot<BotUser> {
+public class CircleCIWebhookBot extends ServiceWebhookBot<BotUser> {
 
-    public CircleCILongWebhookBot(BotConfiguration<BotUser> configuration, String botPath, String nameVariable, String tokenVariable) {
+    public CircleCIWebhookBot(BotConfiguration<BotUser> configuration, String botPath, String nameVariable, String tokenVariable) {
         super(configuration, botPath, nameVariable, tokenVariable);
         BotHelper.registerAllDefaultCommands(this, configuration);
     }

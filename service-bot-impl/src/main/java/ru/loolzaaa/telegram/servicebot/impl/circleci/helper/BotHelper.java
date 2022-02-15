@@ -1,4 +1,4 @@
-package ru.loolzaaa.telegram.servicebot.impl.helper;
+package ru.loolzaaa.telegram.servicebot.impl.circleci.helper;
 
 import org.telegram.telegrambots.extensions.bots.commandbot.commands.ICommandRegistry;
 import org.telegram.telegrambots.meta.api.objects.EntityType;
