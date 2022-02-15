@@ -14,4 +14,8 @@ import java.util.List;
 public class CircleCIBotUser extends AbstractUser {
     private UserStatus status = UserStatus.DEFAULT;
     private List<CircleCISubscription> subscriptions = new ArrayList<>();
+
+    public void clearUnfinishedSubscriptions() {
+        subscriptions.removeIf(s -> s.getPat() == null || s.getSlug() == null);
+    }
 }
