@@ -114,7 +114,8 @@ public class CircleCICommand extends CommonCommand<CircleCIBotUser> {
     }
 
     private void delSubCommand(AbsSender absSender, Chat chat, String[] arguments, CircleCIBotUser configUser) {
-        if (arguments.length >= 2 && (configUser.getStatus() == UserStatus.DEL_SUBSCRIPTION)) {
+        boolean validStatus = configUser.getStatus() == UserStatus.DEFAULT || configUser.getStatus() == UserStatus.DEL_SUBSCRIPTION;
+        if (arguments.length == 2 && validStatus) {
             String slug = arguments[1];
             if (slug.toLowerCase().startsWith("gh")) slug = "github" + slug.substring(2);
             if (slug.toLowerCase().startsWith("bb")) slug = "bitbucket" + slug.substring(2);
@@ -127,9 +128,11 @@ public class CircleCICommand extends CommonCommand<CircleCIBotUser> {
                 sendTextAnswer(absSender, chat, "Проект не найден в подписках");
             }
             configUser.setStatus(UserStatus.DEFAULT);
-        } else if (configUser.getStatus() == UserStatus.DEFAULT) {
+        } else if (arguments.length == 1 && configUser.getStatus() == UserStatus.DEFAULT) {
             sendTextAnswer(absSender, chat, "Введите 'slug' проекта");
             configUser.setStatus(UserStatus.DEL_SUBSCRIPTION);
+        } else {
+            sendTextAnswer(absSender, chat, "Неверная команда или аргументы\nНаберите '/circleci help' для справки");
         }
     }
 
