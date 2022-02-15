@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiValidationException;
-import ru.loolzaaa.telegram.servicebot.core.bot.ServiceWebhookBot;
+import org.telegram.telegrambots.updatesreceivers.ServerlessWebhook;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.request.CircleCIRequest;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.request.CircleCIRequestToUpdateConverter;
 
@@ -21,46 +21,42 @@ import java.util.Arrays;
 
 public class RequestDispatcher {
 
-    private final ServiceWebhookBot bot;
+    private final ServerlessWebhook webhook;
 
     private ObjectMapper objectMapper;
 
-    public RequestDispatcher(ServiceWebhookBot bot) {
-        this.bot = bot;
+    public RequestDispatcher(ServerlessWebhook webhook) {
+        this.webhook = webhook;
     }
 
     public String dispatch(String routeKey, APIGatewayV2HTTPEvent apiGatewayV2HTTPEvent, Context context)
             throws JsonProcessingException, TelegramApiValidationException, GeneralSecurityException {
         switch (routeKey.toLowerCase()) {
             case "/loolz-bot":
-                return dispatchToLoolzBot(context, apiGatewayV2HTTPEvent);
+                return dispatchToLoolzBot(routeKey, context, apiGatewayV2HTTPEvent);
             case "/circleci":
-                return dispatchToCircleCIConverter(context, apiGatewayV2HTTPEvent);
+                return dispatchToCircleCIConverter(routeKey, context, apiGatewayV2HTTPEvent);
             default:
                 throw new IllegalArgumentException("Unknown route key: " + routeKey);
         }
     }
 
-    private String dispatchToLoolzBot(Context context, APIGatewayV2HTTPEvent event) throws JsonProcessingException, TelegramApiValidationException {
+    private String dispatchToLoolzBot(String routeKey, Context context, APIGatewayV2HTTPEvent event) throws JsonProcessingException, TelegramApiValidationException {
         Update update = objectMapper.readValue(event.getBody(), Update.class);
-        BotApiMethod<?> method = bot.onWebhookUpdateReceived(update);
-        if (method != null) {
-            method.validate();
-            return objectMapper.writeValueAsString(method);
-        } else {
-            return "{}";
-        }
+
+        BotApiMethod<?> method = webhook.updateReceived(routeKey, update);
+        return method != null ? objectMapper.writeValueAsString(method) : "{}";
     }
 
-    private String dispatchToCircleCIConverter(Context context, APIGatewayV2HTTPEvent event)
+    private String dispatchToCircleCIConverter(String routeKey, Context context, APIGatewayV2HTTPEvent event)
             throws JsonProcessingException, TelegramApiValidationException, GeneralSecurityException {
         checkCircleCISign(event.getBody(), event.getHeaders().getOrDefault("circleci-signature", ""));
 
         CircleCIRequest request = objectMapper.readValue(event.getBody(), CircleCIRequest.class);
         Update update = CircleCIRequestToUpdateConverter.convert(request);
-        event.setBody(objectMapper.writeValueAsString(update));
 
-        return dispatchToLoolzBot(context, event);
+        BotApiMethod<?> method = webhook.updateReceived(routeKey, update);
+        return method != null ? objectMapper.writeValueAsString(method) : "{}";
     }
 
     public void setObjectMapper(ObjectMapper objectMapper) {

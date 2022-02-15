@@ -9,8 +9,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiValidationException;
+import org.telegram.telegrambots.updatesreceivers.ServerlessWebhook;
 import ru.loolzaaa.telegram.servicebot.core.bot.config.BotConfiguration;
-import ru.loolzaaa.telegram.servicebot.impl.circleci.CircleCILongWebhookBot;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.CircleCIWebhookBot;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUser;
 import ru.loolzaaa.telegram.servicebot.lambda.request.RequestDispatcher;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -40,8 +41,11 @@ public class AWSLambdaTelegramBotRequestHandler implements RequestHandler<APIGat
 
 		configuration = loadConfigurationFromS3();
 
-		CircleCILongWebhookBot bot = new CircleCILongWebhookBot(configuration, null, null, null);
-		requestDispatcher = new RequestDispatcher(bot);
+		ServerlessWebhook webhook = new ServerlessWebhook();
+		CircleCIWebhookBot circleCIWebhookBot = new CircleCIWebhookBot(configuration, "/circleci", null, null);
+		webhook.registerWebhook(circleCIWebhookBot);
+
+		requestDispatcher = new RequestDispatcher(webhook);
 		requestDispatcher.setObjectMapper(objectMapper);
 	}
 
