@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum CircleCIEventType {
+public enum EventType {
     WORKFLOW_COMPLETED("workflow-completed"),
     JOB_COMPLETED("job-completed");
 

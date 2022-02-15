@@ -11,13 +11,13 @@ import ru.loolzaaa.telegram.servicebot.core.bot.config.BotConfiguration;
 import ru.loolzaaa.telegram.servicebot.core.command.ClearConfigCommand;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.command.CircleCICommand;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.command.CircleCIResultCommand;
-import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.CircleCIBotUser;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUser;
 
 import java.util.List;
 
-public class CircleCILongWebhookBot extends ServiceWebhookBot<CircleCIBotUser> {
+public class CircleCILongWebhookBot extends ServiceWebhookBot<BotUser> {
 
-    public CircleCILongWebhookBot(BotConfiguration<CircleCIBotUser> configuration, String botPath, String nameVariable, String tokenVariable) {
+    public CircleCILongWebhookBot(BotConfiguration<BotUser> configuration, String botPath, String nameVariable, String tokenVariable) {
         super(configuration, botPath, nameVariable, tokenVariable);
         register(new ClearConfigCommand<>("clear_config", "Clear bot configuration", configuration));
         register(new CircleCIResultCommand("circleci_result", "CircleCI Webhook", configuration));

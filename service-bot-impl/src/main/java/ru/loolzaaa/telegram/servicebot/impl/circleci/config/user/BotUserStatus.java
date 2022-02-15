@@ -1,6 +1,6 @@
 package ru.loolzaaa.telegram.servicebot.impl.circleci.config.user;
 
-public enum UserStatus {
+public enum BotUserStatus {
     DEFAULT,
     BREAKING,
     ADD_SUBSCRIPTION_PAT,

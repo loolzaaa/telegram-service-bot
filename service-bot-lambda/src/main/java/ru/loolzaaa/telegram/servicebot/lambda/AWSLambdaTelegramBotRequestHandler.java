@@ -11,7 +11,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiValidationException;
 import ru.loolzaaa.telegram.servicebot.core.bot.config.BotConfiguration;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.CircleCILongWebhookBot;
-import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.CircleCIBotUser;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUser;
 import ru.loolzaaa.telegram.servicebot.lambda.request.RequestDispatcher;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
@@ -30,7 +30,7 @@ public class AWSLambdaTelegramBotRequestHandler implements RequestHandler<APIGat
 
 	private static final ObjectMapper objectMapper;
 
-	private static final BotConfiguration<CircleCIBotUser> configuration;
+	private static final BotConfiguration<BotUser> configuration;
 
 	static {
 		objectMapper = new ObjectMapper();
@@ -72,7 +72,7 @@ public class AWSLambdaTelegramBotRequestHandler implements RequestHandler<APIGat
 		}
 	}
 
-	private static BotConfiguration<CircleCIBotUser> loadConfigurationFromS3() {
+	private static BotConfiguration<BotUser> loadConfigurationFromS3() {
 		GetObjectRequest request = GetObjectRequest.builder()
 				.bucket(System.getenv("s3_config_bucket"))
 				.key(System.getenv("s3_config_key"))

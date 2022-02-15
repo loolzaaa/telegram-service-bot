@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class CircleCISubscription {
+public class Subscription {
     private String name;
     private String slug;
     private String pat;

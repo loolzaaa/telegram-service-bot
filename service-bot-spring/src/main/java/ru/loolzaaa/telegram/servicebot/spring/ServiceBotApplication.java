@@ -9,7 +9,7 @@ import org.telegram.telegrambots.meta.TelegramBotsApi;
 import ru.loolzaaa.telegram.servicebot.core.bot.config.BotConfiguration;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.CircleCILongPollingBot;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.CircleCIBotConfiguration;
-import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.CircleCIBotUser;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUser;
 
 @RequiredArgsConstructor
 @SpringBootApplication
@@ -26,7 +26,7 @@ public class ServiceBotApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        BotConfiguration<CircleCIBotUser> configuration = new CircleCIBotConfiguration(CircleCIBotUser::new);
+        BotConfiguration<BotUser> configuration = new CircleCIBotConfiguration(BotUser::new);
         //SetWebhook setWebhook = SetWebhook.builder().url(webhookUrl).build();
         telegramBotsApi.registerBot(new CircleCILongPollingBot(configuration, null, null));
         //telegramBotsApi.registerBot(new ServiceWebhookBot(configuration, "service"), setWebhook);

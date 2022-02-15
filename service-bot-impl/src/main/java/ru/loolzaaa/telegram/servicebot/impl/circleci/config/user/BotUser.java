@@ -11,9 +11,9 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class CircleCIBotUser extends AbstractUser {
-    private UserStatus status = UserStatus.DEFAULT;
-    private List<CircleCISubscription> subscriptions = new ArrayList<>();
+public class BotUser extends AbstractUser {
+    private BotUserStatus status = BotUserStatus.DEFAULT;
+    private List<Subscription> subscriptions = new ArrayList<>();
 
     public void clearUnfinishedSubscriptions() {
         subscriptions.removeIf(s -> s.getPat() == null || s.getSlug() == null);

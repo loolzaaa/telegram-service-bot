@@ -6,19 +6,19 @@ import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 import ru.loolzaaa.telegram.servicebot.core.bot.config.BotConfiguration;
 import ru.loolzaaa.telegram.servicebot.core.command.CommonCommand;
-import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.CircleCIBotUser;
-import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.CircleCISubscription;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUser;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.Subscription;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class CircleCIResultCommand extends CommonCommand<CircleCIBotUser> {
+public class CircleCIResultCommand extends CommonCommand<BotUser> {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
-    public CircleCIResultCommand(String commandIdentifier, String description, BotConfiguration<CircleCIBotUser> configuration) {
+    public CircleCIResultCommand(String commandIdentifier, String description, BotConfiguration<BotUser> configuration) {
         super(commandIdentifier, description, configuration);
     }
 
@@ -31,14 +31,14 @@ public class CircleCIResultCommand extends CommonCommand<CircleCIBotUser> {
             String projectSlug = arguments[3];
             String workflowName = arguments[4];
             String workflowStatus = arguments[5];
-            if (CircleCIEventType.WORKFLOW_COMPLETED.getType().equals(type)) {
+            if (EventType.WORKFLOW_COMPLETED.getType().equals(type)) {
                 if (projectSlug.toLowerCase().startsWith("gh")) projectSlug = "github" + projectSlug.substring(2);
                 if (projectSlug.toLowerCase().startsWith("bb")) projectSlug = "bitbucket" + projectSlug.substring(2);
 
                 final String conditionSlug = projectSlug;
                 configuration.getUsers().stream()
                         .filter(u -> {
-                            List<CircleCISubscription> subscriptions = u.getSubscriptions();
+                            List<Subscription> subscriptions = u.getSubscriptions();
                             List<String> slugs = subscriptions.stream()
                                     .filter(subscription -> subscription.getSlug() != null)
                                     .map(subscription -> subscription.getSlug().toLowerCase())

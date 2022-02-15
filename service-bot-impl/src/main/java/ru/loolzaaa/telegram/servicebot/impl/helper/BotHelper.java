@@ -8,7 +8,7 @@ import ru.loolzaaa.telegram.servicebot.core.bot.config.BotConfiguration;
 import ru.loolzaaa.telegram.servicebot.core.command.ClearConfigCommand;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.command.CircleCICommand;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.command.CircleCIResultCommand;
-import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.CircleCIBotUser;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUser;
 
 import java.util.List;
 
@@ -38,7 +38,7 @@ public class BotHelper {
      * @param bot bot instance for command registry
      * @param configuration bot configuration for registering commands
      */
-    public static void registerAllDefaultCommands(ICommandRegistry bot, BotConfiguration<CircleCIBotUser> configuration) {
+    public static void registerAllDefaultCommands(ICommandRegistry bot, BotConfiguration<BotUser> configuration) {
         bot.register(new ClearConfigCommand<>("clear_config", "Clear bot configuration", configuration));
         bot.register(new CircleCIResultCommand("circleci_result", "CircleCI Webhook", configuration));
         bot.register(new CircleCICommand("circleci", "CircleCI API", configuration));
