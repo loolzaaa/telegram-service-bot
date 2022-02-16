@@ -20,7 +20,7 @@ public class CircleCIWebhookBot extends ServiceWebhookBot<BotUser> {
     }
 
     public CircleCIWebhookBot(BotConfiguration<BotUser> configuration, String botPath) {
-        this(configuration, botPath, null, null);
+        this(configuration, botPath, System.getenv("circleci_bot_name"),  System.getenv("circleci_bot_token"));
     }
 
     @Override

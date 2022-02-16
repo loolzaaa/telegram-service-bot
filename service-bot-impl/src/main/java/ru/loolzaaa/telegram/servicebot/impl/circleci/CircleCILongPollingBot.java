@@ -20,7 +20,7 @@ public class CircleCILongPollingBot extends ServiceLongPollingBot<BotUser> {
     }
 
     public CircleCILongPollingBot(BotConfiguration<BotUser> configuration) {
-        this(configuration, null, null);
+        this(configuration, System.getenv("circleci_bot_name"),  System.getenv("circleci_bot_token"));
     }
 
     @Override
