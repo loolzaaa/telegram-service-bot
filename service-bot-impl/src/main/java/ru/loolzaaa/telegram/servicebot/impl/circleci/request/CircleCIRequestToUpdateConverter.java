@@ -7,6 +7,9 @@ import java.util.Random;
 import java.util.StringJoiner;
 
 public class CircleCIRequestToUpdateConverter {
+
+    public static final String CIRCLECI_KEY = System.getenv("circleci_resultKey");
+
     public static Update convert(CircleCIRequest request) {
         Update update = new Update();
 
@@ -41,6 +44,7 @@ public class CircleCIRequestToUpdateConverter {
 
     private static String getMessageText(CircleCIRequest request) {
         return new StringJoiner(" ", "/circleci_result ", "")
+                .add(CIRCLECI_KEY != null ? CIRCLECI_KEY : "KEY")
                 .add(request.getType() != null ? request.getType() : "EMPTY_TYPE")
                 .add(request.getHappenedAt() != null ? request.getHappenedAt() : "EMPTY_TIME")
                 .add(request.getProject() != null ? request.getProject().getName() : "EMPTY_PROJECT_NAME")
