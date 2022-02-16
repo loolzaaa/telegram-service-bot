@@ -11,6 +11,8 @@ import ru.loolzaaa.telegram.servicebot.impl.circleci.CircleCILongPollingBot;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.CircleCIBotConfiguration;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUser;
 
+import java.util.ArrayList;
+
 @RequiredArgsConstructor
 @SpringBootApplication
 public class ServiceBotApplication implements CommandLineRunner {
@@ -26,7 +28,7 @@ public class ServiceBotApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        BotConfiguration<BotUser> configuration = new CircleCIBotConfiguration(BotUser::new);
+        BotConfiguration<BotUser> configuration = new CircleCIBotConfiguration(new ArrayList<>(), BotUser::new);
         //SetWebhook setWebhook = SetWebhook.builder().url(webhookUrl).build();
         telegramBotsApi.registerBot(new CircleCILongPollingBot(configuration));
         //telegramBotsApi.registerBot(new ServiceWebhookBot(configuration, "service"), setWebhook);

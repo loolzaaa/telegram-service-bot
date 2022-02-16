@@ -1,16 +1,16 @@
 package ru.loolzaaa.telegram.servicebot.core.bot.config;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
 public abstract class AbstractConfiguration<T extends AbstractUser> implements BotConfiguration<T> {
 
-    private final List<T> users = new ArrayList<>();
+    private final List<T> users;
 
     private Supplier<T> userSupplier;
 
-    protected AbstractConfiguration(Supplier<T> userSupplier) {
+    protected AbstractConfiguration(List<T> users, Supplier<T> userSupplier) {
+        this.users = users;
         this.userSupplier = userSupplier;
     }
 
