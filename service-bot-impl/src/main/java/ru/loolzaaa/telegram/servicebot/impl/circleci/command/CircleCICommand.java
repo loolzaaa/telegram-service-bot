@@ -39,6 +39,11 @@ public class CircleCICommand extends CommonCommand<BotUser> {
         if (arguments.length >= 1) {
             final String subCommand = arguments[0];
             BotUser configUser = configuration.getUserById(user.getId());
+            if (configUser == null) {
+                removeCallbackMessage(absSender, chat);
+                sendTextAnswer(absSender, chat, "Something strange... Type /start", false);
+                return;
+            }
 
             try {
                 if ("pat".equalsIgnoreCase(subCommand) && (configUser.getStatus() == BotUserStatus.ADD_SUBSCRIPTION_PAT)) {
