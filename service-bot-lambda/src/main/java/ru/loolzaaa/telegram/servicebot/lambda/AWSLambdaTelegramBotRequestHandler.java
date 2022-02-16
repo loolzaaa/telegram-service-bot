@@ -43,7 +43,7 @@ public class AWSLambdaTelegramBotRequestHandler implements RequestHandler<APIGat
         ServerlessWebhook webhook = new ServerlessWebhook();
         try {
             CircleCIBotConfiguration circleCIBotConfiguration = objectMapper.treeToValue(globalConfiguration.get("circleci"), CircleCIBotConfiguration.class);
-            CircleCIWebhookBot circleCIWebhookBot = new CircleCIWebhookBot(circleCIBotConfiguration, "/circleci");
+            CircleCIWebhookBot circleCIWebhookBot = new CircleCIWebhookBot(circleCIBotConfiguration, "/circleci-bot");
             webhook.registerWebhook(circleCIWebhookBot);
         } catch (JsonProcessingException e) {
             System.err.println("Can't convert CircleCI Bot Configuration. " + e.getMessage());

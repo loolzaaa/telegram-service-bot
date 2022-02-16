@@ -32,8 +32,8 @@ public class RequestDispatcher {
     public String dispatch(String routeKey, APIGatewayV2HTTPEvent apiGatewayV2HTTPEvent, Context context)
             throws JsonProcessingException, TelegramApiValidationException, GeneralSecurityException {
         switch (routeKey.toLowerCase()) {
-            case "/loolz-bot":
-                return dispatchToLoolzBot(routeKey, context, apiGatewayV2HTTPEvent);
+            case "/circleci-bot":
+                return dispatchToBot(routeKey, context, apiGatewayV2HTTPEvent);
             case "/circleci":
                 return dispatchToCircleCIConverter(routeKey, context, apiGatewayV2HTTPEvent);
             default:
@@ -41,7 +41,7 @@ public class RequestDispatcher {
         }
     }
 
-    private String dispatchToLoolzBot(String routeKey, Context context, APIGatewayV2HTTPEvent event) throws JsonProcessingException, TelegramApiValidationException {
+    private String dispatchToBot(String routeKey, Context context, APIGatewayV2HTTPEvent event) throws JsonProcessingException, TelegramApiValidationException {
         Update update = objectMapper.readValue(event.getBody(), Update.class);
 
         BotApiMethod<?> method = webhook.updateReceived(routeKey, update);
