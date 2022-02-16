@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -48,24 +49,13 @@ public class CircleCICommand extends CommonCommand<BotUser> {
                 } else if ("del".equalsIgnoreCase(subCommand)) {
                     delSubCommand(absSender, chat, arguments, configUser);
                 } else if ("list".equalsIgnoreCase(subCommand) && (configUser.getStatus() == BotUserStatus.DEFAULT)) {
-                    SendMessage message = new SendMessage();
-                    message.setChatId(chat.getId().toString());
-                    if (configUser.getSubscriptions().size() > 0) {
-                        message.setText(
-                                configUser.getSubscriptions().stream()
-                                        .map(s -> I18n.get("listCommandFormat", s.getName(), s.getSlug()))
-                                        .collect(Collectors.joining("\n")));
-                    } else {
-                        message.setText(I18n.get("listCommandEmpty"));
-                    }
-                    sendAnswer(absSender, message);
-                    mainMenu(absSender, chat);
+                    listSubCommand(absSender, chat, arguments, configUser);
+                } else if ("help".equalsIgnoreCase(subCommand) && (configUser.getStatus() == BotUserStatus.DEFAULT)) {
+                    helpSubCommand(absSender, chat, arguments, configUser);
                 } else if ("clear".equalsIgnoreCase(subCommand) && (configUser.getStatus() == BotUserStatus.DEFAULT)) {
                     configUser.getSubscriptions().clear();
                     sendTextAnswer(absSender, chat, I18n.get("clearCommandSuccess"));
                     mainMenu(absSender, chat);
-                } else if ("help".equalsIgnoreCase(subCommand) && (configUser.getStatus() == BotUserStatus.DEFAULT)) {
-                    helpSubCommand(absSender, chat, arguments, configUser);
                 } else if ("break".equalsIgnoreCase(subCommand) && (configUser.getStatus() == BotUserStatus.BREAKING)) {
                     configUser.setStatus(BotUserStatus.DEFAULT);
                     sendTextAnswer(absSender, chat, I18n.get("breakCommandSuccess"));
@@ -112,6 +102,7 @@ public class CircleCICommand extends CommonCommand<BotUser> {
                 slugSubCommand(absSender, chat, arguments, configUser);
             }
         } else if (arguments.length == 1 && (configUser.getStatus() == BotUserStatus.DEFAULT)) {
+            removeCallbackMessage(absSender, chat);
             sendTextAnswer(absSender, chat, I18n.get("addCommandTokenInput"));
             configUser.setStatus(BotUserStatus.ADD_SUBSCRIPTION_PAT);
         } else {
@@ -136,6 +127,7 @@ public class CircleCICommand extends CommonCommand<BotUser> {
             configUser.setStatus(BotUserStatus.DEFAULT);
             mainMenu(absSender, chat);
         } else if (arguments.length == 1 && configUser.getStatus() == BotUserStatus.DEFAULT) {
+            removeCallbackMessage(absSender, chat);
             sendTextAnswer(absSender, chat, I18n.get("delCommandSlugInput"));
             configUser.setStatus(BotUserStatus.DEL_SUBSCRIPTION);
         } else {
@@ -229,6 +221,18 @@ public class CircleCICommand extends CommonCommand<BotUser> {
         }
     }
 
+    private void listSubCommand(AbsSender absSender, Chat chat, String[] arguments, BotUser configUser) {
+        String listText = I18n.get("listCommandEmpty");
+        if (configUser.getSubscriptions().size() > 0) {
+            listText = configUser.getSubscriptions().stream()
+                    .map(s -> I18n.get("listCommandFormat", s.getName(), s.getSlug()))
+                    .collect(Collectors.joining("\n"));
+        }
+        removeCallbackMessage(absSender, chat);
+        sendTextAnswer(absSender, chat, listText);
+        mainMenu(absSender, chat);
+    }
+
     private void helpSubCommand(AbsSender absSender, Chat chat, String[] arguments, BotUser configUser) {
         String helpText = new StringJoiner("\n", "*CircleCI Command help:*\n\n", "")
                 .add("`/circleci` \\- main menu for CircleCI Results Bot\n")
@@ -239,19 +243,28 @@ public class CircleCICommand extends CommonCommand<BotUser> {
                 .add("`/circleci help` \\- this message\n")
                 .add("*_NOTE: 'slug' is case\\-sensitive\n\\(/gh/ORGANIZATION/some\\-project\\)_*")
                 .toString();
-
-        SendMessage message = new SendMessage();
-        message.setChatId(chat.getId().toString());
-        message.setText(helpText);
-        message.setParseMode(ParseMode.MARKDOWNV2);
-
-        sendAnswer(absSender, message);
+        removeCallbackMessage(absSender, chat);
+        sendTextAnswer(absSender, chat, helpText);
+        mainMenu(absSender, chat);
     }
 
     private void sendTextAnswer(AbsSender absSender, Chat chat, String text) {
         SendMessage message = new SendMessage();
         message.setChatId(chat.getId().toString());
         message.setText(text);
+        message.setParseMode(ParseMode.MARKDOWNV2);
         sendAnswer(absSender, message);
+    }
+
+    private void removeCallbackMessage(AbsSender absSender, Chat chat) {
+        Integer callbackMessageId = CommonCommand.getCallbackMessageId();
+        if (callbackMessageId != null) {
+            DeleteMessage deleteMessage = DeleteMessage.builder()
+                    .chatId(chat.getId().toString())
+                    .messageId(callbackMessageId)
+                    .build();
+            sendAnswer(absSender, deleteMessage);
+            CommonCommand.setCallbackMessageId(null);
+        }
     }
 }
