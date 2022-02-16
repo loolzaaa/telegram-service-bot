@@ -24,6 +24,10 @@ public abstract class ServiceLongPollingBot<T extends AbstractUser> extends Tele
         this.tokenVariable = tokenVariable;
     }
 
+    protected ServiceLongPollingBot(BotConfiguration<T> configuration) {
+        this(configuration, null, null);
+    }
+
     @Override
     public void onUpdatesReceived(List<Update> updates) {
         for (Update update : updates) {

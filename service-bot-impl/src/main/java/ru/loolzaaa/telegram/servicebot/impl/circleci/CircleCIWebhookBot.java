@@ -21,6 +21,10 @@ public class CircleCIWebhookBot extends ServiceWebhookBot<BotUser> {
         BotHelper.registerAllDefaultCommands(this, configuration);
     }
 
+    public CircleCIWebhookBot(BotConfiguration<BotUser> configuration, String botPath) {
+        this(configuration, botPath, null, null);
+    }
+
     @Override
     public BotApiMethod<?> onWebhookUpdateReceived(Update update) {
         if (update.hasMessage()) {

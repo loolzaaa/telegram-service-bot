@@ -42,7 +42,7 @@ public class AWSLambdaTelegramBotRequestHandler implements RequestHandler<APIGat
 		configuration = loadConfigurationFromS3();
 
 		ServerlessWebhook webhook = new ServerlessWebhook();
-		CircleCIWebhookBot circleCIWebhookBot = new CircleCIWebhookBot(configuration, "/circleci", null, null);
+		CircleCIWebhookBot circleCIWebhookBot = new CircleCIWebhookBot(configuration, "/circleci");
 		webhook.registerWebhook(circleCIWebhookBot);
 
 		requestDispatcher = new RequestDispatcher(webhook);

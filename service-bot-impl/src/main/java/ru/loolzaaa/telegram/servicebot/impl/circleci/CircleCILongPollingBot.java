@@ -20,6 +20,10 @@ public class CircleCILongPollingBot extends ServiceLongPollingBot<BotUser> {
         BotHelper.registerAllDefaultCommands(this, configuration);
     }
 
+    public CircleCILongPollingBot(BotConfiguration<BotUser> configuration) {
+        this(configuration, null, null);
+    }
+
     @Override
     public void onUpdatesReceived(List<Update> updates) {
         for (Update update : updates) {

@@ -27,6 +27,10 @@ public abstract class ServiceWebhookBot<T extends AbstractUser> extends Telegram
         this.tokenVariable = tokenVariable;
     }
 
+    protected ServiceWebhookBot(BotConfiguration<T> configuration, String botPath) {
+        this(configuration, botPath, null, null);
+    }
+
     @Override
     public BotApiMethod<?> onWebhookUpdateReceived(Update update) {
         if (update.hasMessage()) {

@@ -28,7 +28,7 @@ public class ServiceBotApplication implements CommandLineRunner {
     public void run(String... args) throws Exception {
         BotConfiguration<BotUser> configuration = new CircleCIBotConfiguration(BotUser::new);
         //SetWebhook setWebhook = SetWebhook.builder().url(webhookUrl).build();
-        telegramBotsApi.registerBot(new CircleCILongPollingBot(configuration, null, null));
+        telegramBotsApi.registerBot(new CircleCILongPollingBot(configuration));
         //telegramBotsApi.registerBot(new ServiceWebhookBot(configuration, "service"), setWebhook);
     }
 }
