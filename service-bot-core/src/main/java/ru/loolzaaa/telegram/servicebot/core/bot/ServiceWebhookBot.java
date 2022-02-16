@@ -1,15 +1,17 @@
 package ru.loolzaaa.telegram.servicebot.core.bot;
 
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramWebhookCommandBot;
+import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.loolzaaa.telegram.servicebot.core.bot.config.AbstractUser;
 import ru.loolzaaa.telegram.servicebot.core.bot.config.BotConfiguration;
+import ru.loolzaaa.telegram.servicebot.core.command.CommonCommand;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public abstract class ServiceWebhookBot<T extends AbstractUser> extends TelegramWebhookCommandBot {
 
@@ -71,7 +73,26 @@ public abstract class ServiceWebhookBot<T extends AbstractUser> extends Telegram
         }
     }
 
-    protected abstract void processCallbackQueryUpdate(Update update);
+    protected void processCallbackQueryUpdate(Update update) {
+        CallbackQuery callbackQuery = update.getCallbackQuery();
+
+        MessageEntity messageEntity = new MessageEntity(EntityType.BOTCOMMAND, 0, callbackQuery.getData().length());
+
+        Message message = callbackQuery.getMessage();
+        message.setFrom(callbackQuery.getFrom());
+        message.setText(callbackQuery.getData());
+        message.setEntities(List.of(messageEntity));
+
+        update.setMessage(message);
+        update.setCallbackQuery(null);
+        CommonCommand.setCallbackMessageId(message.getMessageId());
+        try {
+            execute(new AnswerCallbackQuery(callbackQuery.getId()));
+            onWebhookUpdateReceived(update);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
 
     @Override
     public String getBotToken() {

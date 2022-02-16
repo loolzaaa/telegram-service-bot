@@ -1,19 +1,16 @@
 package ru.loolzaaa.telegram.servicebot.impl.circleci;
 
-import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
-import org.telegram.telegrambots.meta.api.objects.*;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.User;
 import ru.loolzaaa.telegram.servicebot.core.bot.ServiceWebhookBot;
 import ru.loolzaaa.telegram.servicebot.core.bot.config.BotConfiguration;
-import ru.loolzaaa.telegram.servicebot.core.command.CommonCommand;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUser;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUserStatus;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.helper.BotHelper;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.helper.I18n;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public class CircleCIWebhookBot extends ServiceWebhookBot<BotUser> {
 
@@ -60,27 +57,5 @@ public class CircleCIWebhookBot extends ServiceWebhookBot<BotUser> {
             }
         }
         return super.onWebhookUpdateReceived(update);
-    }
-
-    @Override
-    protected void processCallbackQueryUpdate(Update update) {
-        CallbackQuery callbackQuery = update.getCallbackQuery();
-
-        MessageEntity messageEntity = new MessageEntity(EntityType.BOTCOMMAND, 0, callbackQuery.getData().length());
-
-        Message message = callbackQuery.getMessage();
-        message.setFrom(callbackQuery.getFrom());
-        message.setText(callbackQuery.getData());
-        message.setEntities(List.of(messageEntity));
-
-        update.setMessage(message);
-        update.setCallbackQuery(null);
-        CommonCommand.setCallbackMessageId(message.getMessageId());
-        try {
-            execute(new AnswerCallbackQuery(callbackQuery.getId()));
-            onWebhookUpdateReceived(update);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
     }
 }
