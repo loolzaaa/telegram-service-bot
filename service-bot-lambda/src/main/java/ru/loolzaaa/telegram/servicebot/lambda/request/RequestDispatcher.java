@@ -55,7 +55,7 @@ public class RequestDispatcher {
         CircleCIRequest request = objectMapper.readValue(event.getBody(), CircleCIRequest.class);
         Update update = CircleCIRequestToUpdateConverter.convert(request);
 
-        BotApiMethod<?> method = webhook.updateReceived(routeKey, update);
+        BotApiMethod<?> method = webhook.updateReceived("/circleci-bot", update);
         return method != null ? objectMapper.writeValueAsString(method) : "{}";
     }
 
