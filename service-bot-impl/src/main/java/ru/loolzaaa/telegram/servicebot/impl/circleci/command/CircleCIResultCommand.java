@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 public class CircleCIResultCommand extends CommonCommand<BotUser> {
 
-    public static final String CIRCLECI_KEY = System.getenv("circleci_resultKey");
+    private static final String CIRCLECI_RESULTKEY = System.getenv("circleci_resultKey");
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
@@ -28,7 +28,7 @@ public class CircleCIResultCommand extends CommonCommand<BotUser> {
 
     @Override
     public void execute(AbsSender absSender, User user, Chat chat, String[] arguments) {
-        if (arguments.length >= 7 && arguments[0].equals(CIRCLECI_KEY)) {
+        if (arguments.length >= 7 && arguments[0].equals(CIRCLECI_RESULTKEY)) {
             String type = arguments[1];
             LocalDateTime time = LocalDateTime.parse(arguments[2], DATE_TIME_FORMATTER);
             String projectName = arguments[3];
