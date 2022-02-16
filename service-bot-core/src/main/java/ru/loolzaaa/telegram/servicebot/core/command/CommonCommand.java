@@ -1,13 +1,15 @@
 package ru.loolzaaa.telegram.servicebot.core.command;
 
 import org.telegram.telegrambots.extensions.bots.commandbot.commands.BotCommand;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.loolzaaa.telegram.servicebot.core.bot.config.AbstractUser;
 import ru.loolzaaa.telegram.servicebot.core.bot.config.BotConfiguration;
 
 public abstract class CommonCommand<T extends AbstractUser> extends BotCommand {
+
+    public static final ThreadLocal<Integer> callbackMessageId = new ThreadLocal<>();
 
     protected BotConfiguration<T> configuration;
 
@@ -16,11 +18,19 @@ public abstract class CommonCommand<T extends AbstractUser> extends BotCommand {
         this.configuration = configuration;
     }
 
-    protected void sendAnswer(AbsSender absSender, SendMessage message) {
+    protected void sendAnswer(AbsSender absSender, BotApiMethod<?> message) {
         try {
             absSender.execute(message);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void setCallbackMessageId(Integer messageId) {
+        callbackMessageId.set(messageId);
+    }
+
+    public static Integer getCallbackMessageId() {
+        return callbackMessageId.get();
     }
 }

@@ -5,6 +5,7 @@ import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.loolzaaa.telegram.servicebot.core.bot.ServiceLongPollingBot;
 import ru.loolzaaa.telegram.servicebot.core.bot.config.BotConfiguration;
+import ru.loolzaaa.telegram.servicebot.core.command.CommonCommand;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUser;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUserStatus;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.helper.BotHelper;
@@ -75,6 +76,7 @@ public class CircleCILongPollingBot extends ServiceLongPollingBot<BotUser> {
 
         update.setMessage(message);
         update.setCallbackQuery(null);
+        CommonCommand.setCallbackMessageId(message.getMessageId());
         try {
             execute(new AnswerCallbackQuery(callbackQuery.getId()));
             onUpdateReceived(update);
