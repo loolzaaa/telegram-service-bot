@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -52,21 +53,23 @@ public class CircleCICommand extends CommonCommand<BotUser> {
                     listSubCommand(absSender, chat, arguments, configUser);
                 } else if ("help".equalsIgnoreCase(subCommand) && (configUser.getStatus() == BotUserStatus.DEFAULT)) {
                     helpSubCommand(absSender, chat, arguments, configUser);
+                } else if ("settings".equalsIgnoreCase(subCommand) && (configUser.getStatus() == BotUserStatus.DEFAULT)) {
+                    settingsSubCommand(absSender, chat, arguments, configUser);
                 } else if ("clear".equalsIgnoreCase(subCommand) && (configUser.getStatus() == BotUserStatus.DEFAULT)) {
                     configUser.getSubscriptions().clear();
-                    sendTextAnswer(absSender, chat, I18n.get("clearCommandSuccess"));
+                    sendTextAnswer(absSender, chat, I18n.get("clearCommandSuccess"), false);
                     mainMenu(absSender, chat);
                 } else if ("break".equalsIgnoreCase(subCommand) && (configUser.getStatus() == BotUserStatus.BREAKING)) {
                     configUser.setStatus(BotUserStatus.DEFAULT);
-                    sendTextAnswer(absSender, chat, I18n.get("breakCommandSuccess"));
+                    sendTextAnswer(absSender, chat, I18n.get("breakCommandSuccess"), false);
                     mainMenu(absSender, chat);
                 } else {
-                    sendTextAnswer(absSender, chat, I18n.get("invalidCommandOrArgs"));
+                    sendTextAnswer(absSender, chat, I18n.get("invalidCommandOrArgs"), false);
                 }
             } catch (Exception e) {
                 configUser.setStatus(BotUserStatus.DEFAULT);
                 configUser.clearUnfinishedSubscriptions();
-                sendTextAnswer(absSender, chat, I18n.get("exceptionError"));
+                sendTextAnswer(absSender, chat, I18n.get("exceptionError"), false);
                 mainMenu(absSender, chat);
             }
         } else {
@@ -75,17 +78,7 @@ public class CircleCICommand extends CommonCommand<BotUser> {
     }
 
     private void mainMenu(AbsSender absSender, Chat chat) {
-        InlineKeyboardButton addButton = InlineKeyboardButton.builder().text(I18n.get("mainMenuAddBtn")).callbackData("/circleci add").build();
-        InlineKeyboardButton delButton = InlineKeyboardButton.builder().text(I18n.get("mainMenuDelBtn")).callbackData("/circleci del").build();
-        InlineKeyboardButton listButton = InlineKeyboardButton.builder().text(I18n.get("mainMenuListBtn")).callbackData("/circleci list").build();
-        InlineKeyboardButton helpButton = InlineKeyboardButton.builder().text(I18n.get("mainMenuHelpBtn")).callbackData("/circleci help").build();
-        InlineKeyboardButton settingsButton = InlineKeyboardButton.builder().text(I18n.get("mainMenuSettingsBtn")).callbackData("/circleci settings").build();
-
-        InlineKeyboardMarkup keyboard = InlineKeyboardMarkup.builder()
-                .keyboardRow(List.of(addButton, delButton))
-                .keyboardRow(List.of(listButton, helpButton))
-                .keyboardRow(List.of(settingsButton))
-                .build();
+        InlineKeyboardMarkup keyboard = mainMenuInlineKeyboardMarkup();
 
         SendMessage message = new SendMessage();
         message.setChatId(chat.getId().toString());
@@ -103,10 +96,10 @@ public class CircleCICommand extends CommonCommand<BotUser> {
             }
         } else if (arguments.length == 1 && (configUser.getStatus() == BotUserStatus.DEFAULT)) {
             removeCallbackMessage(absSender, chat);
-            sendTextAnswer(absSender, chat, I18n.get("addCommandTokenInput"));
+            sendTextAnswer(absSender, chat, I18n.get("addCommandTokenInput"), false);
             configUser.setStatus(BotUserStatus.ADD_SUBSCRIPTION_PAT);
         } else {
-            sendTextAnswer(absSender, chat, I18n.get("invalidCommandOrArgs"));
+            sendTextAnswer(absSender, chat, I18n.get("invalidCommandOrArgs"), false);
         }
     }
 
@@ -120,18 +113,18 @@ public class CircleCICommand extends CommonCommand<BotUser> {
             final String conditionSlug = slug;
             boolean wasDeleted = configUser.getSubscriptions().removeIf(s -> s.getSlug().equals(conditionSlug));
             if (wasDeleted) {
-                sendTextAnswer(absSender, chat, I18n.get("delCommandSuccess", conditionSlug));
+                sendTextAnswer(absSender, chat, I18n.get("delCommandSuccess", conditionSlug), false);
             } else {
-                sendTextAnswer(absSender, chat, I18n.get("delCommandNotFound"));
+                sendTextAnswer(absSender, chat, I18n.get("delCommandNotFound"), false);
             }
             configUser.setStatus(BotUserStatus.DEFAULT);
             mainMenu(absSender, chat);
         } else if (arguments.length == 1 && configUser.getStatus() == BotUserStatus.DEFAULT) {
             removeCallbackMessage(absSender, chat);
-            sendTextAnswer(absSender, chat, I18n.get("delCommandSlugInput"));
+            sendTextAnswer(absSender, chat, I18n.get("delCommandSlugInput"), false);
             configUser.setStatus(BotUserStatus.DEL_SUBSCRIPTION);
         } else {
-            sendTextAnswer(absSender, chat, I18n.get("invalidCommandOrArgs"));
+            sendTextAnswer(absSender, chat, I18n.get("invalidCommandOrArgs"), false);
         }
     }
 
@@ -153,18 +146,18 @@ public class CircleCICommand extends CommonCommand<BotUser> {
                 configUser.getSubscriptions().add(subscription); //Must be only one place where add subscription
 
                 if (fromMainCommand) {
-                    sendTextAnswer(absSender, chat, I18n.get("patCommandSlugInput"));
+                    sendTextAnswer(absSender, chat, I18n.get("patCommandSlugInput"), false);
                 }
                 return true;
             } else {
-                sendTextAnswer(absSender, chat, I18n.get("patCommandTokenIncorrect"));
+                sendTextAnswer(absSender, chat, I18n.get("patCommandTokenIncorrect"), false);
                 return false;
             }
         } else if (configUser.getStatus() == BotUserStatus.ADD_SUBSCRIPTION_PAT) {
-            sendTextAnswer(absSender, chat, I18n.get("patCommandTokenIncorrect"));
+            sendTextAnswer(absSender, chat, I18n.get("patCommandTokenIncorrect"), false);
             return false;
         } else {
-            sendTextAnswer(absSender, chat, I18n.get("invalidCommandOrArgs"));
+            sendTextAnswer(absSender, chat, I18n.get("invalidCommandOrArgs"), false);
             return false;
         }
     }
@@ -183,7 +176,7 @@ public class CircleCICommand extends CommonCommand<BotUser> {
             if (slugs.contains(slug.toLowerCase())) {
                 configUser.setStatus(BotUserStatus.DEFAULT);
                 configUser.clearUnfinishedSubscriptions();
-                sendTextAnswer(absSender, chat, I18n.get("slugCommandAlreadyExist"));
+                sendTextAnswer(absSender, chat, I18n.get("slugCommandAlreadyExist"), false);
                 return false;
             }
 
@@ -205,18 +198,18 @@ public class CircleCICommand extends CommonCommand<BotUser> {
                 subscription.setName(projectName); //Must be only one place where set subscription name
                 subscription.setSlug(slug); //Must be only one place where set subscription slug
 
-                sendTextAnswer(absSender, chat, I18n.get("slugCommandSuccess", projectName));
+                sendTextAnswer(absSender, chat, I18n.get("slugCommandSuccess", projectName), false);
                 mainMenu(absSender, chat);
                 return true;
             } else {
-                sendTextAnswer(absSender, chat, I18n.get("slugCommandSlugIncorrect"));
+                sendTextAnswer(absSender, chat, I18n.get("slugCommandSlugIncorrect"), false);
                 return false;
             }
         } else if (configUser.getStatus() == BotUserStatus.ADD_SUBSCRIPTION_SLUG) {
-            sendTextAnswer(absSender, chat, I18n.get("slugCommandSlugIncorrect"));
+            sendTextAnswer(absSender, chat, I18n.get("slugCommandSlugIncorrect"), false);
             return false;
         } else {
-            sendTextAnswer(absSender, chat, I18n.get("invalidCommandOrArgs"));
+            sendTextAnswer(absSender, chat, I18n.get("invalidCommandOrArgs"), false);
             return false;
         }
     }
@@ -229,7 +222,7 @@ public class CircleCICommand extends CommonCommand<BotUser> {
                     .collect(Collectors.joining("\n"));
         }
         removeCallbackMessage(absSender, chat);
-        sendTextAnswer(absSender, chat, listText);
+        sendTextAnswer(absSender, chat, listText, false);
         mainMenu(absSender, chat);
     }
 
@@ -244,15 +237,61 @@ public class CircleCICommand extends CommonCommand<BotUser> {
                 .add("*_NOTE: 'slug' is case\\-sensitive\n\\(/gh/ORGANIZATION/some\\-project\\)_*")
                 .toString();
         removeCallbackMessage(absSender, chat);
-        sendTextAnswer(absSender, chat, helpText);
+        sendTextAnswer(absSender, chat, helpText, true);
         mainMenu(absSender, chat);
     }
 
-    private void sendTextAnswer(AbsSender absSender, Chat chat, String text) {
+    private void settingsSubCommand(AbsSender absSender, Chat chat, String[] arguments, BotUser configUser) {
+        if (arguments.length == 3 && configUser.getStatus() == BotUserStatus.DEFAULT) {
+            Integer callbackMessageId = CommonCommand.getCallbackMessageId();
+            if (callbackMessageId != null) {
+                if ("lang".equalsIgnoreCase(arguments[1])) {
+                    String localeKey = arguments[2];
+                    configUser.setLocaleKey(localeKey);
+                    I18n.setCurrentBundle(localeKey);
+                    removeCallbackMessage(absSender, chat);
+                    mainMenu(absSender, chat);
+                }
+            }
+        } else if (arguments.length == 2 && configUser.getStatus() == BotUserStatus.DEFAULT) {
+            Integer callbackMessageId = CommonCommand.getCallbackMessageId();
+            if (callbackMessageId != null) {
+                EditMessageText editMessageText = EditMessageText.builder()
+                        .chatId(chat.getId().toString())
+                        .messageId(callbackMessageId)
+                        .text(I18n.get("mainMenuText"))
+                        .replyMarkup(mainMenuInlineKeyboardMarkup())
+                        .build();
+                sendAnswer(absSender, editMessageText);
+            }
+        } else if (arguments.length == 1 && configUser.getStatus() == BotUserStatus.DEFAULT) {
+            Integer callbackMessageId = CommonCommand.getCallbackMessageId();
+            if (callbackMessageId != null) {
+                InlineKeyboardButton enButton = InlineKeyboardButton.builder().text("English").callbackData("/circleci settings lang en").build();
+                InlineKeyboardButton ruButton = InlineKeyboardButton.builder().text("Русский").callbackData("/circleci settings lang ru").build();
+                InlineKeyboardButton backButton = InlineKeyboardButton.builder().text(I18n.get("settingsMenuBackBtn")).callbackData("/circleci settings back").build();
+
+                InlineKeyboardMarkup keyboard = InlineKeyboardMarkup.builder()
+                        .keyboardRow(List.of(enButton, ruButton))
+                        .keyboardRow(List.of(backButton))
+                        .build();
+
+                EditMessageText editMessageText = EditMessageText.builder()
+                        .chatId(chat.getId().toString())
+                        .messageId(callbackMessageId)
+                        .text(I18n.get("settingsMenuText"))
+                        .replyMarkup(keyboard)
+                        .build();
+                sendAnswer(absSender, editMessageText);
+            }
+        }
+    }
+
+    private void sendTextAnswer(AbsSender absSender, Chat chat, String text, boolean parseMarkdown) {
         SendMessage message = new SendMessage();
         message.setChatId(chat.getId().toString());
         message.setText(text);
-        message.setParseMode(ParseMode.MARKDOWNV2);
+        if (parseMarkdown) message.setParseMode(ParseMode.MARKDOWNV2);
         sendAnswer(absSender, message);
     }
 
@@ -266,5 +305,19 @@ public class CircleCICommand extends CommonCommand<BotUser> {
             sendAnswer(absSender, deleteMessage);
             CommonCommand.setCallbackMessageId(null);
         }
+    }
+
+    private InlineKeyboardMarkup mainMenuInlineKeyboardMarkup() {
+        InlineKeyboardButton addButton = InlineKeyboardButton.builder().text(I18n.get("mainMenuAddBtn")).callbackData("/circleci add").build();
+        InlineKeyboardButton delButton = InlineKeyboardButton.builder().text(I18n.get("mainMenuDelBtn")).callbackData("/circleci del").build();
+        InlineKeyboardButton listButton = InlineKeyboardButton.builder().text(I18n.get("mainMenuListBtn")).callbackData("/circleci list").build();
+        InlineKeyboardButton helpButton = InlineKeyboardButton.builder().text(I18n.get("mainMenuHelpBtn")).callbackData("/circleci help").build();
+        InlineKeyboardButton settingsButton = InlineKeyboardButton.builder().text(I18n.get("mainMenuSettingsBtn")).callbackData("/circleci settings").build();
+
+        return InlineKeyboardMarkup.builder()
+                .keyboardRow(List.of(addButton, delButton))
+                .keyboardRow(List.of(listButton, helpButton))
+                .keyboardRow(List.of(settingsButton))
+                .build();
     }
 }
