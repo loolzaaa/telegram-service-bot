@@ -137,6 +137,7 @@ public class CircleCICommand extends CommonCommand<BotUser> {
         boolean fromAddSubCommand = arguments.length == 3 && (configUser.getStatus() == BotUserStatus.DEFAULT);
         boolean fromMainCommand = arguments.length == 2 && (configUser.getStatus() == BotUserStatus.ADD_SUBSCRIPTION_PAT);
         if (fromAddSubCommand || fromMainCommand) {
+            removeCallbackMessage(absSender, chat); //Remove potential token from chat
             final String pat = arguments[1];
             HttpRequest request = HttpRequest.newBuilder(URI.create(API_PATH + "/me"))
                     .header("Circle-Token", pat)
@@ -159,6 +160,7 @@ public class CircleCICommand extends CommonCommand<BotUser> {
                 return false;
             }
         } else if (configUser.getStatus() == BotUserStatus.ADD_SUBSCRIPTION_PAT) {
+            removeCallbackMessage(absSender, chat); //Remove potential token from chat
             sendTextAnswer(absSender, chat, I18n.get("patCommandTokenIncorrect"), false);
             return false;
         } else {

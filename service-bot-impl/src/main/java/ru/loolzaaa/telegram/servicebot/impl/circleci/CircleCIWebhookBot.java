@@ -5,6 +5,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import ru.loolzaaa.telegram.servicebot.core.bot.ServiceWebhookBot;
 import ru.loolzaaa.telegram.servicebot.core.bot.config.BotConfiguration;
+import ru.loolzaaa.telegram.servicebot.core.command.CommonCommand;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUser;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUserStatus;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.helper.BotHelper;
@@ -47,6 +48,7 @@ public class CircleCIWebhookBot extends ServiceWebhookBot<BotUser> {
                         BotHelper.changeMessageToCommand(update, "/circleci break");
                     }
                     if (configUser.getStatus() == BotUserStatus.ADD_SUBSCRIPTION_PAT) {
+                        CommonCommand.setCallbackMessageId(update.getMessage().getMessageId()); //Save potentially token for removing
                         BotHelper.changeMessageToCommand(update, "/circleci pat " + update.getMessage().getText());
                     } else if (configUser.getStatus() == BotUserStatus.ADD_SUBSCRIPTION_SLUG) {
                         BotHelper.changeMessageToCommand(update, "/circleci slug " + update.getMessage().getText());
