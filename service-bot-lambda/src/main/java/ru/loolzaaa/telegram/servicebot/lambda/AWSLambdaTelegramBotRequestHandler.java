@@ -5,15 +5,12 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiValidationException;
 import org.telegram.telegrambots.updatesreceivers.ServerlessWebhook;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.CircleCIWebhookBot;
-import ru.loolzaaa.telegram.servicebot.impl.circleci.config.CircleCIBotConfiguration;
-import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUser;
+import ru.loolzaaa.telegram.servicebot.lambda.config.GlobalConfiguration;
 import ru.loolzaaa.telegram.servicebot.lambda.request.RequestDispatcher;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
@@ -22,7 +19,6 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 public class AWSLambdaTelegramBotRequestHandler implements RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HTTPResponse> {
@@ -33,7 +29,7 @@ public class AWSLambdaTelegramBotRequestHandler implements RequestHandler<APIGat
 
     private static final ObjectMapper objectMapper;
 
-    private static final JsonNode globalConfiguration;
+    private static final GlobalConfiguration globalConfiguration;
 
     static {
         objectMapper = new ObjectMapper();
@@ -44,15 +40,10 @@ public class AWSLambdaTelegramBotRequestHandler implements RequestHandler<APIGat
         globalConfiguration = loadConfigurationFromS3();
 
         ServerlessWebhook webhook = new ServerlessWebhook();
-        try {
-            JavaType circleCIUserType = objectMapper.getTypeFactory().constructParametricType(List.class, BotUser.class);
-            List<BotUser> users = objectMapper.treeToValue(globalConfiguration.get("circleci").get("users"), circleCIUserType);
-            CircleCIBotConfiguration circleCIBotConfiguration = new CircleCIBotConfiguration(users, BotUser::new);
-            CircleCIWebhookBot circleCIWebhookBot = new CircleCIWebhookBot(circleCIBotConfiguration, "/circleci-bot");
-            webhook.registerWebhook(circleCIWebhookBot);
-        } catch (JsonProcessingException e) {
-            System.err.println("Can't convert CircleCI Bot Configuration. " + e.getMessage());
-        }
+
+		CircleCIWebhookBot circleCIWebhookBot = new CircleCIWebhookBot(
+				globalConfiguration.getCircleCIBotConfiguration(), "/circleci-bot");
+		webhook.registerWebhook(circleCIWebhookBot);
 
         requestDispatcher = new RequestDispatcher(webhook);
         requestDispatcher.setObjectMapper(objectMapper);
@@ -85,13 +76,13 @@ public class AWSLambdaTelegramBotRequestHandler implements RequestHandler<APIGat
         }
     }
 
-    private static JsonNode loadConfigurationFromS3() {
+    private static GlobalConfiguration loadConfigurationFromS3() {
         GetObjectRequest request = GetObjectRequest.builder()
                 .bucket(System.getenv("s3_config_bucket"))
                 .key(System.getenv("s3_config_key"))
                 .build();
         try {
-            return objectMapper.readTree(S3.getObject(request));
+            return objectMapper.readValue(S3.getObject(request), GlobalConfiguration.class);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
