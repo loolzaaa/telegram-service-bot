@@ -9,14 +9,14 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-public abstract class AbstractUser {
+public class BaseUser {
     private Long id;
     private String firstName;
     private String username;
     private Long chatId;
     private LocalDateTime lastActivity;
 
-    protected AbstractUser(Long id) {
+    protected BaseUser(Long id) {
         this.id = id;
     }
 }

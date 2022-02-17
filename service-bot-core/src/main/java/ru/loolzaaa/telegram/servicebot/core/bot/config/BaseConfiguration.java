@@ -3,12 +3,12 @@ package ru.loolzaaa.telegram.servicebot.core.bot.config;
 import java.util.List;
 import java.util.function.Supplier;
 
-public abstract class AbstractConfiguration<T extends AbstractUser> implements BotConfiguration<T> {
+public class BaseConfiguration<T extends BaseUser> implements BotConfiguration<T> {
 
     private final List<T> users;
     private final Supplier<T> userSupplier;
 
-    protected AbstractConfiguration(List<T> users, Supplier<T> userSupplier) {
+    public BaseConfiguration(List<T> users, Supplier<T> userSupplier) {
         this.users = users;
         this.userSupplier = userSupplier;
     }

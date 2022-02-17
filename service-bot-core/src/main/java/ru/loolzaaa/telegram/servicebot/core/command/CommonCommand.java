@@ -4,10 +4,10 @@ import org.telegram.telegrambots.extensions.bots.commandbot.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import ru.loolzaaa.telegram.servicebot.core.bot.config.AbstractUser;
+import ru.loolzaaa.telegram.servicebot.core.bot.config.BaseUser;
 import ru.loolzaaa.telegram.servicebot.core.bot.config.BotConfiguration;
 
-public abstract class CommonCommand<T extends AbstractUser> extends BotCommand {
+public abstract class CommonCommand<T extends BaseUser> extends BotCommand {
 
     public static final ThreadLocal<Integer> callbackMessageId = new ThreadLocal<>();
 

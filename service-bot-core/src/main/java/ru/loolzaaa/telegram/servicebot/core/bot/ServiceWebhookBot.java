@@ -6,14 +6,14 @@ import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import ru.loolzaaa.telegram.servicebot.core.bot.config.AbstractUser;
+import ru.loolzaaa.telegram.servicebot.core.bot.config.BaseUser;
 import ru.loolzaaa.telegram.servicebot.core.bot.config.BotConfiguration;
 import ru.loolzaaa.telegram.servicebot.core.command.CommonCommand;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-public abstract class ServiceWebhookBot<T extends AbstractUser> extends TelegramWebhookCommandBot {
+public abstract class ServiceWebhookBot<T extends BaseUser> extends TelegramWebhookCommandBot {
 
     private String botPath;
 
