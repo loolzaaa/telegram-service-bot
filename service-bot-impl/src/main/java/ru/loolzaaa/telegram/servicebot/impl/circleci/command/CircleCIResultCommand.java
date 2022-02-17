@@ -1,5 +1,6 @@
 package ru.loolzaaa.telegram.servicebot.impl.circleci.command;
 
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
@@ -58,13 +59,21 @@ public class CircleCIResultCommand extends CommonCommand<BotUser> {
                         })
                         .collect(Collectors.toList());
                 for (BotUser u : users) {
-                    SendPhoto resultMessage = SendPhoto.builder()
-                            .chatId(u.getChatId().toString())
-                            .caption(projectName)
-                            .build();
-                    if (file != null) resultMessage.setPhoto(file);
                     try {
-                        absSender.execute(resultMessage);
+                        if (file != null) {
+                            SendPhoto answer = SendPhoto.builder()
+                                    .chatId(u.getChatId().toString())
+                                    .photo(file)
+                                    .caption(projectName)
+                                    .build();
+                            absSender.execute(answer);
+                        } else {
+                            SendMessage answer = SendMessage.builder()
+                                    .chatId(chat.getId().toString())
+                                    .text(projectName + "--" + workflowStatus)
+                                    .build();
+                            sendAnswer(absSender, answer);
+                        }
                     } catch (TelegramApiException e) {
                         e.printStackTrace();
                     }
