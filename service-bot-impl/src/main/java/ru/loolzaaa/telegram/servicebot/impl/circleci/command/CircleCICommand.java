@@ -204,6 +204,7 @@ public class CircleCICommand extends CommonCommand<BotUser> {
 
                 subscription.setName(projectName); //Must be only one place where set subscription name
                 subscription.setSlug(slug); //Must be only one place where set subscription slug
+                subscription.setPat("DELETED"); //Replace PAT for dummy string, because null string = incomplete subscription
 
                 sendTextAnswer(absSender, chat, I18n.get("slugCommandSuccess", projectName), false);
                 mainMenu(absSender, chat);
