@@ -11,22 +11,15 @@ import ru.loolzaaa.telegram.servicebot.core.bot.config.BotConfiguration;
 import ru.loolzaaa.telegram.servicebot.core.command.CommonCommand;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.BotUser;
 import ru.loolzaaa.telegram.servicebot.impl.circleci.config.user.Subscription;
+import ru.loolzaaa.telegram.servicebot.impl.circleci.helper.ResultHelper;
 
-import java.time.format.DateTimeFormatter;
+import java.io.ByteArrayInputStream;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CircleCIResultCommand extends CommonCommand<BotUser> {
 
-    private static final String CIRCLECI_RESULTKEY = System.getenv("circleci_resultKey");
-
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-
-    private static final Map<String, InputFile> statusFileMap = Map.of(
-            "success", new InputFile("https://circleci.com/docs/assets/img/docs/svg-passed.png"),
-            "failed", new InputFile("https://circleci.com/docs/assets/img/docs/svg-failed.png")
-    );
+    private static final String CIRCLECI_RESULT_KEY = System.getenv("circleci_resultKey");
 
     public CircleCIResultCommand(String commandIdentifier, String description, BotConfiguration<BotUser> configuration) {
         super(commandIdentifier, description, configuration);
@@ -34,18 +27,30 @@ public class CircleCIResultCommand extends CommonCommand<BotUser> {
 
     @Override
     public void execute(AbsSender absSender, User user, Chat chat, String[] arguments) {
-        if (arguments.length >= 7 && arguments[0].equals(CIRCLECI_RESULTKEY)) {
+        if (arguments.length >= 10 && arguments[0].equals(CIRCLECI_RESULT_KEY)) {
             String type = arguments[1];
-            //LocalDateTime time = LocalDateTime.parse(arguments[2], DATE_TIME_FORMATTER);
-            String projectName = arguments[3];
+            String workflowStatus = arguments[2];
+            String commitAuthor = arguments[3];
             String projectSlug = arguments[4];
-            //String workflowName = arguments[5];
-            String workflowStatus = arguments[6];
+            String workflowName = arguments[5];
+            String branchName = arguments[6];
+            String commitName = arguments[7];
+            String commitHash = arguments[8];
+            String jobName = arguments[9];
             if (EventType.WORKFLOW_COMPLETED.getType().equals(type)) {
                 if (projectSlug.toLowerCase().startsWith("gh")) projectSlug = "github" + projectSlug.substring(2);
                 if (projectSlug.toLowerCase().startsWith("bb")) projectSlug = "bitbucket" + projectSlug.substring(2);
 
-                InputFile file = statusFileMap.get(workflowStatus);
+                ResultHelper.ResultData resultData = new ResultHelper.ResultData(commitAuthor, projectSlug, workflowName,
+                        branchName, commitName, commitHash, jobName);
+                byte[] resultImage = "success".equals(workflowStatus) ?
+                        ResultHelper.getResult(ResultHelper.Result.SUCCESS, resultData) :
+                        "failed".equals(workflowStatus) ?
+                                ResultHelper.getResult(ResultHelper.Result.FAILED, resultData) :
+                                null;
+                InputFile file = resultImage == null ?
+                        null :
+                        new InputFile(new ByteArrayInputStream(resultImage), "result.png");
 
                 final String conditionSlug = projectSlug;
                 List<BotUser> users = configuration.getUsers().stream()
@@ -64,13 +69,12 @@ public class CircleCIResultCommand extends CommonCommand<BotUser> {
                             SendPhoto answer = SendPhoto.builder()
                                     .chatId(u.getChatId().toString())
                                     .photo(file)
-                                    .caption(projectName)
                                     .build();
                             absSender.execute(answer);
                         } else {
                             SendMessage answer = SendMessage.builder()
                                     .chatId(chat.getId().toString())
-                                    .text(projectName + "--" + workflowStatus)
+                                    .text(projectSlug + "--" + workflowStatus)
                                     .build();
                             sendAnswer(absSender, answer);
                         }

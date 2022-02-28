@@ -3,41 +3,52 @@ package ru.loolzaaa.telegram.servicebot.impl.circleci.helper;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.text.Document;
+import javax.swing.text.Element;
+import javax.swing.text.View;
+import javax.swing.text.ViewFactory;
+import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLEditorKit;
+import javax.swing.text.html.ImageView;
 import javax.swing.text.html.StyleSheet;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 public final class ResultHelper {
 
-    public static String getResult(Result resultType) {
+    private static final int WIDTH = 560;
+    private static final int HEIGHT = 560;
+
+    public static byte[] getResult(Result resultType, ResultData resultData) {
         final String html = String.format(
                 HTML_TEMPLATE,
                 resultType.getIconUrl(),
                 resultType.getText(),
+                resultData.getCommitAuthor(),
+                resultData.getProjectName(),
+                resultData.getWorkflowName(),
+                resultData.getBranchName(),
+                resultData.getCommitName(),
+                resultData.getCommitHash(),
+                resultData.getJobName(),
                 resultType.getIconUrl(),
                 resultType.getShortText());
 
-        final Dimension dimension = new Dimension(800, 560);
-        final HTMLEditorKit editorKit = new HTMLEditorKit();
+        final Dimension dimension = new Dimension(WIDTH, HEIGHT);
+        final SyncHTMLEditorKit editorKit = new SyncHTMLEditorKit();
         final JEditorPane editorPane = new JEditorPane();
         editorPane.setSize(dimension);
         editorPane.setEditable(false);
         editorPane.setEditorKit(editorKit);
-        editorPane.setMargin(new Insets(0,0,0,0));
 
         StyleSheet styleSheet = editorKit.getStyleSheet();
-        styleSheet.addRule("html body {margin: 0; padding: 0; }");
-        styleSheet.addRule(".main-container {font-size: 14px; }");
-        styleSheet.addRule(".main-table {width: 480px; }");
-        styleSheet.addRule(".top-logo {display: block; width: 80px; height: 80px; margin-left: auto; margin-right: auto; }");
-        styleSheet.addRule(".bottom-logo {width: 20px; height: 20px; vertical-align: middle; }");
-        styleSheet.addRule(".job-name-column {width: 43%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }");
-        styleSheet.addRule(String.format(".job-status {color: #%s; font-weight: bold; vertical-align: middle; }", resultType.getColor()));
-        styleSheet.addRule(String.format(".workflow-header {border-radius: 3px 3px 0 0; color: #ffffff; font-weight: bold; letter-spacing: 0.5px; padding: 20px; text-align: center; background-color: #%s; }", resultType.getColor()));
+        styleSheet.addRule(String.format(".main-container {font-size: 14px; width: %dpx; }", WIDTH));
+        styleSheet.addRule(".main-table {width: 100%; }");
         styleSheet.addRule(".info-table {padding: 20px; width: 100%; }");
+        styleSheet.addRule(String.format(".workflow-header {color: #ffffff; font-weight: bold; letter-spacing: 0.5px; padding: 20px; text-align: center; background-color: #%s; }", resultType.getColor()));
+        styleSheet.addRule(".job-name-column {width: 43%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }");
+        styleSheet.addRule(String.format(".job-status {color: #%s; font-weight: bold; vertical-align: middle;}", resultType.getColor()));
         styleSheet.addRule(".mark-text {color: #337ab7; }");
 
         Document doc = editorKit.createDefaultDocument();
@@ -45,21 +56,22 @@ public final class ResultHelper {
         editorPane.setText(html);
 
         Dimension prefSize = editorPane.getPreferredSize();
-        BufferedImage img = new BufferedImage(prefSize.width, prefSize.height, BufferedImage.TYPE_INT_ARGB);
-        Graphics graphics = img.getGraphics();
+        BufferedImage img = new BufferedImage(prefSize.width, prefSize.height, BufferedImage.TYPE_INT_RGB);
+        Graphics2D graphics = img.createGraphics();
         editorPane.setSize(prefSize);
         editorPane.paint(graphics);
-        try {
-            final String formatName = "png";
-            ImageIO.write(img, formatName, new File("img.png"));
-        } catch (IOException e) {
-            throw new RuntimeException(String.format("Exception while saving '%s' image", "img"), e);
-        }
 
-        return html;
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        final String formatName = "png";
+        try {
+            ImageIO.write(img, formatName, byteArrayOutputStream);
+        } catch (IOException e) {
+            throw new RuntimeException("Exception while saving image", e);
+        }
+        return byteArrayOutputStream.toByteArray();
     }
 
-    enum Result {
+    public enum Result {
         SUCCESS(
                 "42c98b",
                 "Success",
@@ -100,6 +112,55 @@ public final class ResultHelper {
         }
     }
 
+    public static class ResultData {
+        private final String commitAuthor;
+        private final String projectName;
+        private final String workflowName;
+        private final String branchName;
+        private final String commitName;
+        private final String commitHash;
+        private final String jobName;
+
+        public ResultData(String commitAuthor, String projectName, String workflowName, String branchName,
+                          String commitName, String commitHash, String jobName) {
+            this.commitAuthor = commitAuthor;
+            this.projectName = projectName;
+            this.workflowName = workflowName;
+            this.branchName = branchName;
+            this.commitName = commitName;
+            this.commitHash = commitHash;
+            this.jobName = jobName;
+        }
+
+        public String getCommitAuthor() {
+            return commitAuthor;
+        }
+
+        public String getProjectName() {
+            return projectName;
+        }
+
+        public String getWorkflowName() {
+            return workflowName;
+        }
+
+        public String getBranchName() {
+            return branchName;
+        }
+
+        public String getCommitName() {
+            return commitName;
+        }
+
+        public String getCommitHash() {
+            return commitHash;
+        }
+
+        public String getJobName() {
+            return jobName;
+        }
+    }
+
     public static final String HTML_TEMPLATE = "<!doctype html>" +
             "<html lang=\"en\">" +
             "<head>" +
@@ -113,7 +174,7 @@ public final class ResultHelper {
             "    <tbody>" +
             "      <tr>" +
             "        <td>" +
-            "          <img class=\"top-logo\" src=\"%s\">" +
+            "          <center><img src=\"%s\" width=\"80\" height=\"80\"/></center>" +
             "        </td>" +
             "      </tr>" +
             "      <tr>" +
@@ -121,28 +182,28 @@ public final class ResultHelper {
             "      </tr>" +
             "      <tr>" +
             "        <td>" +
-            "          <table class=\"info-table\">" +
+            "          <table class=\"info-table\" style=\"border-bottom: 1px solid black;\">" +
             "            <tbody>" +
             "              <tr>" +
             "                <td style=\"font-weight: bold; width: 18%%;\">Author</td>" +
-            "                <td style=\"font-family: 'Courier';\">Anastasia66627</td>" +
+            "                <td style=\"font-family: Monospace;\">%s</td>" +
             "              </tr>" +
             "              <tr>" +
             "                <td style=\"font-weight: bold; width: 18%%;\">Project</td>" +
-            "                <td style=\"font-family: 'Courier';\" class=\"mark-text\">PNPPK/new-product-tracker-back</td>" +
+            "                <td style=\"font-family: Monospace;\" class=\"mark-text\">%s</td>" +
             "              </tr>" +
             "              <tr>" +
             "                <td style=\"font-weight: bold; width: 18%%;\">Workflow</td>" +
-            "                <td style=\"font-family: 'Courier';\" class=\"mark-text\">main</td>" +
+            "                <td style=\"font-family: Monospace;\" class=\"mark-text\">%s</td>" +
             "              </tr>" +
             "              <tr>" +
             "                <td style=\"font-weight: bold; width: 18%%;\">Branch</td>" +
-            "                <td style=\"font-family: 'Courier';\" class=\"mark-text\">master</td>" +
+            "                <td style=\"font-family: Monospace;\" class=\"mark-text\">%s</td>" +
             "              </tr>" +
             "              <tr>" +
             "                <td style=\"font-weight: bold; width: 18%%;\">Commit</td>" +
-            "                <td style=\"font-family: 'Courier';\">" +
-            "                  <div>Add OperationServiceImplTest <span class=\"mark-text\">5592240</span></div>" +
+            "                <td style=\"font-family: Monospace;\">" +
+            "                  <div>%s <span class=\"mark-text\">%s</span></div>" +
             "                </td>" +
             "              </tr>" +
             "            </tbody>" +
@@ -155,9 +216,9 @@ public final class ResultHelper {
             "            <tbody>" +
             "              <tr>" +
             "                <td style=\"font-weight: bold; width: 18%%;\">Jobs</td>" +
-            "                <td style=\"font-family: 'Courier';\" class=\"job-name-column mark-text\">build-and-test</td>" +
+            "                <td class=\"job-name-column mark-text\" style=\"font-family: Monospace;\">%s</td>" +
             "                <td>" +
-            "                  <img class=\"bottom-logo\" src=\"%s\">" +
+            "                  <img src=\"%s\" width=\"20\" height=\"20\" style=\"vertical-align: middle;\"/>" +
             "                  <span class=\"job-status\">%s</span>" +
             "                </td>" +
             "              </tr>" +
@@ -169,4 +230,25 @@ public final class ResultHelper {
             "  </table>" +
             "</div>" +
             "</body>";
+
+    static class SyncHTMLEditorKit extends HTMLEditorKit {
+
+        public Document createDefaultDocument() {
+            HTMLDocument doc = (HTMLDocument) super.createDefaultDocument();
+            doc.setAsynchronousLoadPriority(-1);
+            return doc;
+        }
+
+        public ViewFactory getViewFactory() {
+            return new HTMLFactory() {
+                public View create(Element elem) {
+                    View view = super.create(elem);
+                    if (view instanceof ImageView) {
+                        ((ImageView) view).setLoadsSynchronously(true);
+                    }
+                    return view;
+                }
+            };
+        }
+    }
 }
