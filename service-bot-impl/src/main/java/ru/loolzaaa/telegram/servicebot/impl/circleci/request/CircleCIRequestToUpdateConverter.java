@@ -46,11 +46,14 @@ public class CircleCIRequestToUpdateConverter {
         return new StringJoiner(" ", "/circleci_result ", "")
                 .add(CIRCLECI_RESULTKEY != null ? CIRCLECI_RESULTKEY : "KEY")
                 .add(request.getType() != null ? request.getType() : "EMPTY_TYPE")
-                .add(request.getHappenedAt() != null ? request.getHappenedAt() : "EMPTY_TIME")
-                .add(request.getProject() != null ? request.getProject().getName() : "EMPTY_PROJECT_NAME")
+                .add(request.getWorkflow() != null ? request.getWorkflow().getStatus() : "EMPTY_WORKFLOW_STATUS")
+                .add(request.getPipeline().getVcs().getCommit().getAuthor().getName() != null ? request.getPipeline().getVcs().getCommit().getAuthor().getName() : "EMPTY_COMMIT_AUTHOR")
                 .add(request.getProject() != null ? request.getProject().getSlug() : "EMPTY_PROJECT_SLUG")
                 .add(request.getWorkflow() != null ? request.getWorkflow().getName() : "EMPTY_WORKFLOW_NAME")
-                .add(request.getWorkflow() != null ? request.getWorkflow().getStatus() : "EMPTY_WORKFLOW_STATUS")
+                .add(request.getPipeline().getVcs().getBranch() != null ? request.getPipeline().getVcs().getBranch() : "EMPTY_BRANCH_NAME")
+                .add(request.getPipeline().getVcs().getCommit().getSubject() != null ? request.getPipeline().getVcs().getCommit().getSubject() : "EMPTY_COMMIT_NAME")
+                .add("EMPTY_COMMIT_HASH")
+                .add(request.getJob().getName() != null ? request.getJob().getName() : "EMPTY_JOB_NAME")
                 .toString();
     }
 }
