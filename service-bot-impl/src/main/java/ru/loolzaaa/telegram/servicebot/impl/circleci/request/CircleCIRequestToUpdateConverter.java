@@ -53,7 +53,7 @@ public class CircleCIRequestToUpdateConverter {
                 .add(request.getPipeline().getVcs().getBranch() != null ? request.getPipeline().getVcs().getBranch() : "EMPTY_BRANCH_NAME")
                 .add(request.getPipeline().getVcs().getCommit().getSubject() != null ? request.getPipeline().getVcs().getCommit().getSubject() : "EMPTY_COMMIT_NAME")
                 .add("EMPTY_COMMIT_HASH")
-                .add(request.getJob().getName() != null ? request.getJob().getName() : "EMPTY_JOB_NAME")
+                .add("EMPTY_JOB_NAME")
                 .toString();
     }
 }
