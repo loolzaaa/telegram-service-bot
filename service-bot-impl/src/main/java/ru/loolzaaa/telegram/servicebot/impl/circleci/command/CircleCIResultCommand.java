@@ -15,9 +15,13 @@ import ru.loolzaaa.telegram.servicebot.impl.circleci.helper.ResultHelper;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 public class CircleCIResultCommand extends CommonCommand<BotUser> {
+
+    private static final String COMMIT_NAME_START = "<<<$";
+    private static final String COMMIT_NAME_END = "$>>>";
 
     private static final String CIRCLECI_RESULT_KEY = System.getenv("circleci_resultKey");
 
@@ -27,16 +31,33 @@ public class CircleCIResultCommand extends CommonCommand<BotUser> {
 
     @Override
     public void execute(AbsSender absSender, User user, Chat chat, String[] arguments) {
-        if (arguments.length >= 10 && arguments[0].equals(CIRCLECI_RESULT_KEY)) {
+        if (arguments.length >= 12 && arguments[0].equals(CIRCLECI_RESULT_KEY)) {
             String type = arguments[1];
             String workflowStatus = arguments[2];
             String commitAuthor = arguments[3];
             String projectSlug = arguments[4];
             String workflowName = arguments[5];
             String branchName = arguments[6];
-            String commitName = arguments[7];
-            String commitHash = arguments[8];
-            String jobName = arguments[9];
+            String commitName = "";
+            int i = 7;
+            if (COMMIT_NAME_START.equals(arguments[i])) {
+                i++;
+                StringJoiner stringJoiner = new StringJoiner(" ");
+                while (!COMMIT_NAME_END.equals(arguments[i])) {
+                    stringJoiner.add(arguments[i]);
+                    i++;
+                }
+                commitName = stringJoiner.toString();
+            }
+            String commitHash = "";
+            if (arguments.length >= (i + 2)) {
+                commitHash = arguments[i + 1];
+            }
+            String jobName = "";
+            if (arguments.length >= (i + 3)) {
+                jobName = arguments[i + 2];
+            }
+
             if (EventType.WORKFLOW_COMPLETED.getType().equals(type)) {
                 if (projectSlug.toLowerCase().startsWith("gh")) projectSlug = "github" + projectSlug.substring(2);
                 if (projectSlug.toLowerCase().startsWith("bb")) projectSlug = "bitbucket" + projectSlug.substring(2);
